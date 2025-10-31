@@ -2,6 +2,9 @@ use anchor_lang::prelude::*;
 
 declare_id!("6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu");
 
+pub mod instructions;
+pub mod state;
+
 #[program]
 pub mod staking_vault {
     use super::*;
