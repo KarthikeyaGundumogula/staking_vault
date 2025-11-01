@@ -156,7 +156,7 @@ export async function setUp(
 export async function getAirdrop(
   connection: Connection,
   user: anchor.web3.PublicKey,
-  amount: number = 20 * anchor.web3.LAMPORTS_PER_SOL
+  amount: number = 2 * anchor.web3.LAMPORTS_PER_SOL
 ): Promise<void> {
   const tx = await connection.requestAirdrop(user, amount);
   await connection.confirmTransaction(tx);

@@ -1,6 +1,10 @@
 import * as anchor from "@coral-xyz/anchor";
 import { assert } from "chai";
 import { setUp, getAirdrop, program, connection, SetupResult } from "./utils";
+import provider_wallet from "../provider-wallet.json";
+import wallet from "../staker-wallet.json";
+
+import { createKeyPairFromBytes } from "gill";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
@@ -25,15 +29,10 @@ describe("staking_vault", () => {
   const stake_amount = new anchor.BN(2_000_000_000); // 2,000 tokens
 
   before(async () => {
-    provider = anchor.web3.Keypair.generate();
-    staker = anchor.web3.Keypair.generate();
-    god = anchor.web3.Keypair.generate();
+    provider = anchor.web3.Keypair.fromSecretKey(new Uint8Array(provider_wallet.provider));
+    staker = anchor.web3.Keypair.fromSecretKey(new Uint8Array(wallet.wallet));
+    god = provider;
     un_authorized_staker = anchor.web3.Keypair.generate();
-
-    await getAirdrop(connection, provider.publicKey);
-    await getAirdrop(connection, staker.publicKey);
-    await getAirdrop(connection, god.publicKey);
-    await getAirdrop(connection, un_authorized_staker.publicKey);
 
     setupData = await setUp(provider, staker, god, un_authorized_staker);
 
@@ -67,7 +66,7 @@ describe("staking_vault", () => {
     };
   });
 
-  it("Open Staking Vault", async () => {
+  it.only("Open Staking Vault", async () => {
     try {
       const tx = await program.methods
         .open(duration, min_amount, max_amount, initial_rewards_deposit, staker.publicKey)
@@ -99,7 +98,7 @@ describe("staking_vault", () => {
     );
   });
 
-  it("Stake Tokens", async () => {
+  it.only("Stake Tokens", async () => {
     console.log("--Opening Vault--");
     // run this sigle test for complete workflow testing 
     // try {
@@ -145,7 +144,7 @@ describe("staking_vault", () => {
     );
   });
 
-  it("Unstake Tokens", async () => {
+  it.only("Unstake Tokens", async () => {
     console.log("--Unstaking Tokens--");
     const staker_balance_pre_unstake = await connection.getTokenAccountBalance(
       setupData.staker_staking_ata
