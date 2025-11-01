@@ -10,7 +10,7 @@ pub struct IncrementStake<'info> {
     #[account(mut)]
     pub staker: Signer<'info>,
     #[account(
-      seeds = [b"staking_vault",staking_vault.nft_id.to_le_bytes().as_ref(),staking_vault.provider.key().as_ref()],
+      seeds = [b"staking_vault",staking_vault.provider.key().as_ref()],
       bump = staking_vault.bump
     )]
     pub staking_vault: Account<'info, StakingVault>,

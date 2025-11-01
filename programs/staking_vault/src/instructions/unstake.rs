@@ -10,7 +10,7 @@ pub struct UnStake<'info> {
     #[account(mut)]
     pub staker: Signer<'info>,
     #[account(
-      seeds = [b"staking_vault",staking_vault.nft_id.to_le_bytes().as_ref(),staking_vault.provider.key().as_ref()],
+      seeds = [b"staking_vault",staking_vault.provider.key().as_ref()],
       bump = staking_vault.bump,
     )]
     pub staking_vault: Account<'info, StakingVault>,
@@ -57,11 +57,9 @@ impl<'info> UnStake<'info> {
             authority: self.staking_vault.to_account_info(),
             mint: self.staking_token_mint.to_account_info(),
         };
-        let nft_id = self.staking_vault.nft_id.to_le_bytes();
         let provider = self.staking_vault.provider.key();
         let seeds = &[
             b"staking_vault",
-            nft_id.as_ref(),
             provider.as_ref(),
             &[self.staking_vault.bump],
         ];
@@ -78,11 +76,9 @@ impl<'info> UnStake<'info> {
             authority: self.staking_vault.to_account_info(),
             mint: self.reward_token_mint.to_account_info(),
         };
-        let nft_id = self.staking_vault.nft_id.to_le_bytes();
         let provider = self.staking_vault.provider.key();
         let seeds = &[
             b"staking_vault",
-            nft_id.as_ref(),
             provider.as_ref(),
             &[self.staking_vault.bump],
         ];

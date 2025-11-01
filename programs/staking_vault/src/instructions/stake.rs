@@ -10,7 +10,7 @@ pub struct Stake<'info> {
     #[account(mut)]
     pub staker: Signer<'info>,
     #[account(
-      seeds = [b"staking_vault",staking_vault.nft_id.to_le_bytes().as_ref(),staking_vault.provider.key().as_ref()],
+      seeds = [b"staking_vault",staking_vault.provider.key().as_ref()],
       bump = staking_vault.bump,
     )]
     pub staking_vault: Account<'info, StakingVault>,
@@ -22,7 +22,7 @@ pub struct Stake<'info> {
     )]
     pub staker_token_ata: InterfaceAccount<'info, TokenAccount>,
     #[account(
-      init,
+      init_if_needed,
       payer = staker,
       associated_token::mint = staking_token_mint,
       associated_token::authority = staking_vault,

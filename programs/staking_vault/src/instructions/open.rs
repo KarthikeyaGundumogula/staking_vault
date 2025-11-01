@@ -13,8 +13,8 @@ pub struct Open<'info> {
     #[account(
       init,
       payer = provider,
-      seeds = [b"staking_vault",nft_id.to_le_bytes().as_ref(),provider.key().as_ref()],
-      space = StakingVault::INIT_SPACE,
+      seeds = [b"staking_vault",provider.key().as_ref()],
+      space = StakingVault::INIT_SPACE + 8,
       bump
     )]
     pub staking_vault: Account<'info, StakingVault>,
@@ -28,7 +28,7 @@ pub struct Open<'info> {
     #[account(mint::token_program = token_program)]
     pub reward_token_mint: InterfaceAccount<'info, Mint>,
     #[account(
-      init,
+      init_if_needed,
       payer = provider,
       associated_token::mint = reward_token_mint,
       associated_token::authority = staking_vault,
@@ -47,15 +47,14 @@ impl<'info> Open<'info> {
         duration: u64,
         min_amount: u64,
         max_amount: u64,
-        start_time: u64,
-        bumps: &OpenBumps,
+        bumps: OpenBumps,
     ) -> Result<()> {
       self.staking_vault.set_inner(StakingVault{
         provider: self.provider.key(),
         duration,
-        start_time,
-        mint_a: self.staking_token_mint.key(),
-        mint_b: self.reward_token_mint.key(),
+        start_time: 0,
+        staking_mint: self.staking_token_mint.key(),
+        reward_mint: self.reward_token_mint.key(),
         nft_mint: self.staking_token_mint.key(),
         bump: bumps.staking_vault,
         minimum_amount: min_amount,
