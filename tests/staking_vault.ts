@@ -12,8 +12,10 @@ describe("staking_vault", () => {
   let provider: anchor.web3.Keypair;
   let staker: anchor.web3.Keypair;
   let god: anchor.web3.Keypair;
+  let un_authorized_staker: anchor.web3.Keypair;
   let mintAccounts;
   let stakeAccounts;
+  let unStakeAccounts;
 
   const TOKEN_DECIMALS = 1_000_000; // 6 decimals
   const duration = new anchor.BN(1); // 1 second for testing only
@@ -26,12 +28,14 @@ describe("staking_vault", () => {
     provider = anchor.web3.Keypair.generate();
     staker = anchor.web3.Keypair.generate();
     god = anchor.web3.Keypair.generate();
+    un_authorized_staker = anchor.web3.Keypair.generate();
 
     await getAirdrop(connection, provider.publicKey);
     await getAirdrop(connection, staker.publicKey);
     await getAirdrop(connection, god.publicKey);
+    await getAirdrop(connection, un_authorized_staker.publicKey);
 
-    setupData = await setUp(provider, staker, god);
+    setupData = await setUp(provider, staker, god, un_authorized_staker);
 
     mintAccounts = {
       provider: provider.publicKey,
@@ -54,6 +58,12 @@ describe("staking_vault", () => {
       systemProgram: SYSTEM_PROGRAM_ID,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    };
+    unStakeAccounts = {
+      ...stakeAccounts,
+      vaultRewardAta: setupData.vault_reward_ata,
+      stakerRewardAta: setupData.staker_reward_ata,
+      rewardTokenMint: setupData.reward_mint,
     };
   });
 
@@ -146,12 +156,7 @@ describe("staking_vault", () => {
     try {
       const tx = await program.methods
         .unstake()
-        .accountsStrict({
-          ...stakeAccounts,
-          vaultRewardAta: setupData.vault_reward_ata,
-          stakerRewardAta: setupData.staker_reward_ata,
-          rewardTokenMint: setupData.reward_mint,
-        })
+        .accountsStrict(unStakeAccounts)
         .signers([staker])
         .rpc();
       console.log("Unstake transaction: ", tx);
@@ -176,4 +181,28 @@ describe("staking_vault", () => {
         staker_reward_balance_pre_unstake.value.uiAmount
     );
   })
+
+  it("Fail Stake from Unauthorized Staker", async () => {
+    console.log("--Staking Tokens from Unauthorized Staker--");
+    try {
+      const tx = await program.methods
+        .stake(stake_amount)
+        .accountsStrict({
+          ...stakeAccounts,
+          staker: un_authorized_staker.publicKey,
+          stakerTokenAta: setupData.un_authorized_staker_staking_ata,
+        })
+        .signers([un_authorized_staker])
+        .rpc();
+      console.error("Stake transaction should have failed but succeeded: ", tx);
+    }
+    catch (error) {
+      console.error(
+        "Error in staking tokens from unauthorized staker: ",
+        error
+      );
+
+      //--- error you will see is `Error Code: ConstraintHasOne.` ---//
+    }
+  });
 });

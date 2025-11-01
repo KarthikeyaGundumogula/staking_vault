@@ -29,12 +29,14 @@ export interface SetupResult {
   vault_reward_ata: anchor.web3.PublicKey;
   staker_staking_ata: anchor.web3.PublicKey;
   vault_staking_ata: anchor.web3.PublicKey;
+  un_authorized_staker_staking_ata: anchor.web3.PublicKey;
 }
 
 export async function setUp(
   provider: anchor.web3.Keypair,
   staker: anchor.web3.Keypair,
-  god: anchor.web3.Keypair
+  god: anchor.web3.Keypair,
+  un_authorized_staker: anchor.web3.Keypair
 ): Promise<SetupResult> {
   console.log("Provider: ", provider.publicKey.toBase58());
   console.log("Staker: ", staker.publicKey.toBase58());
@@ -103,6 +105,13 @@ export async function setUp(
     staker.publicKey
   ).then((ata) => ata.address);
 
+  const un_authorized_staker_staking_ata =  await getOrCreateAssociatedTokenAccount(
+    connection,
+    provider,
+    staking_mint, 
+    un_authorized_staker.publicKey
+  ).then((ata) => ata.address);
+
   console.log("staking mint: ", staking_mint.toBase58());
   console.log("staker staking ata: ", staker_staking_ata.toBase58());
   console.log("vault staking ata: ", vault_staking_ata.toBase58());
@@ -140,6 +149,7 @@ export async function setUp(
     vault_reward_ata,
     staker_staking_ata,
     vault_staking_ata,
+    un_authorized_staker_staking_ata,
   };
 }
 
