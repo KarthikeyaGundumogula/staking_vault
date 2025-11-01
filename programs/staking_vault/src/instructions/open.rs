@@ -48,9 +48,11 @@ impl<'info> Open<'info> {
         min_amount: u64,
         max_amount: u64,
         bumps: OpenBumps,
+        staker: Pubkey,
     ) -> Result<()> {
       self.staking_vault.set_inner(StakingVault{
         provider: self.provider.key(),
+        staker,
         duration,
         start_time: 0,
         staking_mint: self.staking_token_mint.key(),

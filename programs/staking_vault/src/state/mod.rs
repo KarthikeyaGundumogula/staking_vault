@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 #[derive(InitSpace)]
 pub struct StakingVault {
   pub provider: Pubkey,
+  pub staker: Pubkey,
   pub duration: u64,
   pub start_time: u64,
   pub reward_mint: Pubkey,

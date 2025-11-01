@@ -17,9 +17,10 @@ pub mod staking_vault {
         min_amount: u64,
         max_amount: u64,
         initial_rewards_deposit: u64,
+        staker:Pubkey
     ) -> Result<()> {
         ctx.accounts
-            .init_config(duration, min_amount, max_amount, ctx.bumps)?;
+            .init_config(duration, min_amount, max_amount, ctx.bumps,staker)?;
         ctx.accounts.deposit_rewards(initial_rewards_deposit)?;
         Ok(())
     }

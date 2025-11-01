@@ -12,6 +12,7 @@ pub struct Stake<'info> {
     #[account(
       seeds = [b"staking_vault",staking_vault.provider.key().as_ref()],
       bump = staking_vault.bump,
+      has_one = staker,
     )]
     pub staking_vault: Account<'info, StakingVault>,
     #[account(

@@ -60,7 +60,7 @@ describe("staking_vault", () => {
   it("Open Staking Vault", async () => {
     try {
       const tx = await program.methods
-        .open(duration, min_amount, max_amount, initial_rewards_deposit)
+        .open(duration, min_amount, max_amount, initial_rewards_deposit, staker.publicKey)
         .accountsStrict(mintAccounts)
         .signers([provider])
         .rpc();
@@ -91,9 +91,10 @@ describe("staking_vault", () => {
 
   it("Stake Tokens", async () => {
     console.log("--Opening Vault--");
+    // run this sigle test for complete workflow testing 
     // try {
     //   const tx = await program.methods
-    //     .open(duration, min_amount, max_amount, initial_rewards_deposit)
+    //     .open(duration, min_amount, max_amount, initial_rewards_deposit,staker.publicKey)
     //     .accountsStrict(mintAccounts)
     //     .signers([provider])
     //     .rpc();
