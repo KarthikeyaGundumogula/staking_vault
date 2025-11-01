@@ -13,9 +13,10 @@ describe("staking_vault", () => {
   let staker: anchor.web3.Keypair;
   let god: anchor.web3.Keypair;
   let mintAccounts;
+  let stakeAccounts;
 
   const TOKEN_DECIMALS = 1_000_000; // 6 decimals
-  const duration = new anchor.BN(60 * 60); // 1 hour
+  const duration = new anchor.BN(1); // 1 second for testing only
   const min_amount = new anchor.BN(1_000_000); // 1 token
   const max_amount = new anchor.BN(10_000_000_000); // 10,000 tokens
   const initial_rewards_deposit = new anchor.BN(5_000_000_000); // 5,000 tokens
@@ -39,6 +40,17 @@ describe("staking_vault", () => {
       rewardTokenMint: setupData.reward_mint,
       vaultRewardTokenAta: setupData.vault_reward_ata,
       stakingTokenMint: setupData.staking_mint,
+      systemProgram: SYSTEM_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    };
+
+    stakeAccounts = {
+      staker: staker.publicKey,
+      stakingVault: setupData.vault_state_pda,
+      stakingTokenMint: setupData.staking_mint,
+      stakerTokenAta: setupData.staker_staking_ata,
+      stakingVaultAta: setupData.vault_staking_ata,
       systemProgram: SYSTEM_PROGRAM_ID,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -95,16 +107,7 @@ describe("staking_vault", () => {
     try {
       const tx = await program.methods
         .stake(stake_amount)
-        .accountsStrict({
-          staker: staker.publicKey,
-          stakingVault: setupData.vault_state_pda,
-          stakingTokenMint: setupData.staking_mint,
-          stakerTokenAta: setupData.staker_staking_ata,
-          stakingVaultAta: setupData.vault_staking_ata,
-          systemProgram: SYSTEM_PROGRAM_ID,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        })
+        .accountsStrict(stakeAccounts)
         .signers([staker])
         .rpc();
       console.log("Stake transaction: ", tx);
@@ -130,4 +133,46 @@ describe("staking_vault", () => {
       stake_amount.toNumber() / TOKEN_DECIMALS
     );
   });
+
+  it("Unstake Tokens", async () => {
+    console.log("--Unstaking Tokens--");
+    const staker_balance_pre_unstake = await connection.getTokenAccountBalance(
+      setupData.staker_staking_ata
+    );
+    const staker_reward_balance_pre_unstake = await connection.getTokenAccountBalance(
+      setupData.staker_reward_ata
+    );
+    try {
+      const tx = await program.methods
+        .unstake()
+        .accountsStrict({
+          ...stakeAccounts,
+          vaultRewardAta: setupData.vault_reward_ata,
+          stakerRewardAta: setupData.staker_reward_ata,
+          rewardTokenMint: setupData.reward_mint,
+        })
+        .signers([staker])
+        .rpc();
+      console.log("Unstake transaction: ", tx);
+    } catch (error) {
+      console.error("Error in unstaking tokens: ", error);
+    }
+    // -- Unstaking assertions -- //
+    const staker_balance_post_unstake = await connection.getTokenAccountBalance(
+      setupData.staker_staking_ata
+    );
+    assert.equal(
+      staker_balance_post_unstake.value.uiAmount -
+        staker_balance_pre_unstake.value.uiAmount,
+      stake_amount.toNumber() / TOKEN_DECIMALS
+    );
+    
+    const staker_reward_balance_post_unstake = await connection.getTokenAccountBalance(
+      setupData.staker_reward_ata
+    );
+    assert.isTrue(
+      staker_reward_balance_post_unstake.value.uiAmount >
+        staker_reward_balance_pre_unstake.value.uiAmount
+    );
+  })
 });
