@@ -59,7 +59,7 @@ Each use case leverages the core features of:
 
 **Technical Details**
 
-![Technical Architecture](<images/DePIN%20Rewards%20Technical%20Architecture%20(1).jpg>)
+![Technical Architecture](diagrams/technical-diaram.png)
 
 ## User Stories
 
