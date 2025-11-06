@@ -37,7 +37,7 @@ import {
   type MaybeAccount,
   type MaybeEncodedAccount,
   type ReadonlyUint8Array,
-} from 'gill';
+} from '@solana/kit';
 
 export const STAKING_VAULT_DISCRIMINATOR = new Uint8Array([
   68, 141, 118, 28, 87, 84, 213, 233,

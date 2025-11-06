@@ -10,12 +10,15 @@ import {
   combineCodec,
   fixDecoderSize,
   fixEncoderSize,
+  getAddressDecoder,
   getAddressEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getProgramDerivedAddress,
   getStructDecoder,
   getStructEncoder,
+  getU64Decoder,
+  getU64Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -31,7 +34,7 @@ import {
   type TransactionSigner,
   type WritableAccount,
   type WritableSignerAccount,
-} from 'gill';
+} from '@solana/kit';
 import { STAKING_VAULT_PROGRAM_ADDRESS } from '../programs';
 import {
   expectAddress,
@@ -39,23 +42,21 @@ import {
   type ResolvedAccount,
 } from '../shared';
 
-export const UNSTAKE_DISCRIMINATOR = new Uint8Array([
-  90, 95, 107, 42, 205, 124, 50, 225,
+export const OPEN_DISCRIMINATOR = new Uint8Array([
+  228, 220, 155, 71, 199, 189, 60, 45,
 ]);
 
-export function getUnstakeDiscriminatorBytes() {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(UNSTAKE_DISCRIMINATOR);
+export function getOpenDiscriminatorBytes() {
+  return fixEncoderSize(getBytesEncoder(), 8).encode(OPEN_DISCRIMINATOR);
 }
 
-export type UnstakeInstruction<
+export type OpenInstruction<
   TProgram extends string = typeof STAKING_VAULT_PROGRAM_ADDRESS,
-  TAccountStaker extends string | AccountMeta<string> = string,
+  TAccountProvider extends string | AccountMeta<string> = string,
   TAccountStakingVault extends string | AccountMeta<string> = string,
-  TAccountStakerTokenAta extends string | AccountMeta<string> = string,
-  TAccountStakingVaultAta extends string | AccountMeta<string> = string,
-  TAccountVaultRewardAta extends string | AccountMeta<string> = string,
-  TAccountStakerRewardAta extends string | AccountMeta<string> = string,
+  TAccountProviderRewardTokensAta extends string | AccountMeta<string> = string,
   TAccountRewardTokenMint extends string | AccountMeta<string> = string,
+  TAccountVaultRewardTokenAta extends string | AccountMeta<string> = string,
   TAccountStakingTokenMint extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends
     | string
@@ -71,28 +72,22 @@ export type UnstakeInstruction<
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
-      TAccountStaker extends string
-        ? WritableSignerAccount<TAccountStaker> &
-            AccountSignerMeta<TAccountStaker>
-        : TAccountStaker,
+      TAccountProvider extends string
+        ? WritableSignerAccount<TAccountProvider> &
+            AccountSignerMeta<TAccountProvider>
+        : TAccountProvider,
       TAccountStakingVault extends string
-        ? ReadonlyAccount<TAccountStakingVault>
+        ? WritableAccount<TAccountStakingVault>
         : TAccountStakingVault,
-      TAccountStakerTokenAta extends string
-        ? WritableAccount<TAccountStakerTokenAta>
-        : TAccountStakerTokenAta,
-      TAccountStakingVaultAta extends string
-        ? WritableAccount<TAccountStakingVaultAta>
-        : TAccountStakingVaultAta,
-      TAccountVaultRewardAta extends string
-        ? WritableAccount<TAccountVaultRewardAta>
-        : TAccountVaultRewardAta,
-      TAccountStakerRewardAta extends string
-        ? WritableAccount<TAccountStakerRewardAta>
-        : TAccountStakerRewardAta,
+      TAccountProviderRewardTokensAta extends string
+        ? WritableAccount<TAccountProviderRewardTokensAta>
+        : TAccountProviderRewardTokensAta,
       TAccountRewardTokenMint extends string
         ? ReadonlyAccount<TAccountRewardTokenMint>
         : TAccountRewardTokenMint,
+      TAccountVaultRewardTokenAta extends string
+        ? WritableAccount<TAccountVaultRewardTokenAta>
+        : TAccountVaultRewardTokenAta,
       TAccountStakingTokenMint extends string
         ? ReadonlyAccount<TAccountStakingTokenMint>
         : TAccountStakingTokenMint,
@@ -109,81 +104,103 @@ export type UnstakeInstruction<
     ]
   >;
 
-export type UnstakeInstructionData = { discriminator: ReadonlyUint8Array };
+export type OpenInstructionData = {
+  discriminator: ReadonlyUint8Array;
+  duration: bigint;
+  minAmount: bigint;
+  maxAmount: bigint;
+  initialRewardsDeposit: bigint;
+  staker: Address;
+};
 
-export type UnstakeInstructionDataArgs = {};
+export type OpenInstructionDataArgs = {
+  duration: number | bigint;
+  minAmount: number | bigint;
+  maxAmount: number | bigint;
+  initialRewardsDeposit: number | bigint;
+  staker: Address;
+};
 
-export function getUnstakeInstructionDataEncoder(): FixedSizeEncoder<UnstakeInstructionDataArgs> {
+export function getOpenInstructionDataEncoder(): FixedSizeEncoder<OpenInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)]]),
-    (value) => ({ ...value, discriminator: UNSTAKE_DISCRIMINATOR })
+    getStructEncoder([
+      ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
+      ['duration', getU64Encoder()],
+      ['minAmount', getU64Encoder()],
+      ['maxAmount', getU64Encoder()],
+      ['initialRewardsDeposit', getU64Encoder()],
+      ['staker', getAddressEncoder()],
+    ]),
+    (value) => ({ ...value, discriminator: OPEN_DISCRIMINATOR })
   );
 }
 
-export function getUnstakeInstructionDataDecoder(): FixedSizeDecoder<UnstakeInstructionData> {
+export function getOpenInstructionDataDecoder(): FixedSizeDecoder<OpenInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
+    ['duration', getU64Decoder()],
+    ['minAmount', getU64Decoder()],
+    ['maxAmount', getU64Decoder()],
+    ['initialRewardsDeposit', getU64Decoder()],
+    ['staker', getAddressDecoder()],
   ]);
 }
 
-export function getUnstakeInstructionDataCodec(): FixedSizeCodec<
-  UnstakeInstructionDataArgs,
-  UnstakeInstructionData
+export function getOpenInstructionDataCodec(): FixedSizeCodec<
+  OpenInstructionDataArgs,
+  OpenInstructionData
 > {
   return combineCodec(
-    getUnstakeInstructionDataEncoder(),
-    getUnstakeInstructionDataDecoder()
+    getOpenInstructionDataEncoder(),
+    getOpenInstructionDataDecoder()
   );
 }
 
-export type UnstakeAsyncInput<
-  TAccountStaker extends string = string,
+export type OpenAsyncInput<
+  TAccountProvider extends string = string,
   TAccountStakingVault extends string = string,
-  TAccountStakerTokenAta extends string = string,
-  TAccountStakingVaultAta extends string = string,
-  TAccountVaultRewardAta extends string = string,
-  TAccountStakerRewardAta extends string = string,
+  TAccountProviderRewardTokensAta extends string = string,
   TAccountRewardTokenMint extends string = string,
+  TAccountVaultRewardTokenAta extends string = string,
   TAccountStakingTokenMint extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
-  staker: TransactionSigner<TAccountStaker>;
-  stakingVault: Address<TAccountStakingVault>;
-  stakerTokenAta?: Address<TAccountStakerTokenAta>;
-  stakingVaultAta?: Address<TAccountStakingVaultAta>;
-  vaultRewardAta?: Address<TAccountVaultRewardAta>;
-  stakerRewardAta?: Address<TAccountStakerRewardAta>;
+  provider: TransactionSigner<TAccountProvider>;
+  stakingVault?: Address<TAccountStakingVault>;
+  providerRewardTokensAta?: Address<TAccountProviderRewardTokensAta>;
   rewardTokenMint: Address<TAccountRewardTokenMint>;
+  vaultRewardTokenAta?: Address<TAccountVaultRewardTokenAta>;
   stakingTokenMint: Address<TAccountStakingTokenMint>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
+  duration: OpenInstructionDataArgs['duration'];
+  minAmount: OpenInstructionDataArgs['minAmount'];
+  maxAmount: OpenInstructionDataArgs['maxAmount'];
+  initialRewardsDeposit: OpenInstructionDataArgs['initialRewardsDeposit'];
+  staker: OpenInstructionDataArgs['staker'];
 };
 
-export async function getUnstakeInstructionAsync<
-  TAccountStaker extends string,
+export async function getOpenInstructionAsync<
+  TAccountProvider extends string,
   TAccountStakingVault extends string,
-  TAccountStakerTokenAta extends string,
-  TAccountStakingVaultAta extends string,
-  TAccountVaultRewardAta extends string,
-  TAccountStakerRewardAta extends string,
+  TAccountProviderRewardTokensAta extends string,
   TAccountRewardTokenMint extends string,
+  TAccountVaultRewardTokenAta extends string,
   TAccountStakingTokenMint extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof STAKING_VAULT_PROGRAM_ADDRESS,
 >(
-  input: UnstakeAsyncInput<
-    TAccountStaker,
+  input: OpenAsyncInput<
+    TAccountProvider,
     TAccountStakingVault,
-    TAccountStakerTokenAta,
-    TAccountStakingVaultAta,
-    TAccountVaultRewardAta,
-    TAccountStakerRewardAta,
+    TAccountProviderRewardTokensAta,
     TAccountRewardTokenMint,
+    TAccountVaultRewardTokenAta,
     TAccountStakingTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -191,15 +208,13 @@ export async function getUnstakeInstructionAsync<
   >,
   config?: { programAddress?: TProgramAddress }
 ): Promise<
-  UnstakeInstruction<
+  OpenInstruction<
     TProgramAddress,
-    TAccountStaker,
+    TAccountProvider,
     TAccountStakingVault,
-    TAccountStakerTokenAta,
-    TAccountStakingVaultAta,
-    TAccountVaultRewardAta,
-    TAccountStakerRewardAta,
+    TAccountProviderRewardTokensAta,
     TAccountRewardTokenMint,
+    TAccountVaultRewardTokenAta,
     TAccountStakingTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -212,15 +227,19 @@ export async function getUnstakeInstructionAsync<
 
   // Original accounts.
   const originalAccounts = {
-    staker: { value: input.staker ?? null, isWritable: true },
-    stakingVault: { value: input.stakingVault ?? null, isWritable: false },
-    stakerTokenAta: { value: input.stakerTokenAta ?? null, isWritable: true },
-    stakingVaultAta: { value: input.stakingVaultAta ?? null, isWritable: true },
-    vaultRewardAta: { value: input.vaultRewardAta ?? null, isWritable: true },
-    stakerRewardAta: { value: input.stakerRewardAta ?? null, isWritable: true },
+    provider: { value: input.provider ?? null, isWritable: true },
+    stakingVault: { value: input.stakingVault ?? null, isWritable: true },
+    providerRewardTokensAta: {
+      value: input.providerRewardTokensAta ?? null,
+      isWritable: true,
+    },
     rewardTokenMint: {
       value: input.rewardTokenMint ?? null,
       isWritable: false,
+    },
+    vaultRewardTokenAta: {
+      value: input.vaultRewardTokenAta ?? null,
+      isWritable: true,
     },
     stakingTokenMint: {
       value: input.stakingTokenMint ?? null,
@@ -238,43 +257,33 @@ export async function getUnstakeInstructionAsync<
     ResolvedAccount
   >;
 
+  // Original args.
+  const args = { ...input };
+
   // Resolve default values.
+  if (!accounts.stakingVault.value) {
+    accounts.stakingVault.value = await getProgramDerivedAddress({
+      programAddress,
+      seeds: [
+        getBytesEncoder().encode(
+          new Uint8Array([
+            115, 116, 97, 107, 105, 110, 103, 95, 118, 97, 117, 108, 116,
+          ])
+        ),
+        getAddressEncoder().encode(expectAddress(accounts.provider.value)),
+      ],
+    });
+  }
   if (!accounts.tokenProgram.value) {
     accounts.tokenProgram.value =
       'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as Address<'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'>;
   }
-  if (!accounts.stakerTokenAta.value) {
-    accounts.stakerTokenAta.value = await getProgramDerivedAddress({
+  if (!accounts.providerRewardTokensAta.value) {
+    accounts.providerRewardTokensAta.value = await getProgramDerivedAddress({
       programAddress:
         'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
       seeds: [
-        getAddressEncoder().encode(expectAddress(accounts.staker.value)),
-        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
-        getAddressEncoder().encode(
-          expectAddress(accounts.stakingTokenMint.value)
-        ),
-      ],
-    });
-  }
-  if (!accounts.stakingVaultAta.value) {
-    accounts.stakingVaultAta.value = await getProgramDerivedAddress({
-      programAddress:
-        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
-      seeds: [
-        getAddressEncoder().encode(expectAddress(accounts.stakingVault.value)),
-        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
-        getAddressEncoder().encode(
-          expectAddress(accounts.stakingTokenMint.value)
-        ),
-      ],
-    });
-  }
-  if (!accounts.vaultRewardAta.value) {
-    accounts.vaultRewardAta.value = await getProgramDerivedAddress({
-      programAddress:
-        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
-      seeds: [
-        getAddressEncoder().encode(expectAddress(accounts.stakingVault.value)),
+        getAddressEncoder().encode(expectAddress(accounts.provider.value)),
         getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
         getAddressEncoder().encode(
           expectAddress(accounts.rewardTokenMint.value)
@@ -282,12 +291,12 @@ export async function getUnstakeInstructionAsync<
       ],
     });
   }
-  if (!accounts.stakerRewardAta.value) {
-    accounts.stakerRewardAta.value = await getProgramDerivedAddress({
+  if (!accounts.vaultRewardTokenAta.value) {
+    accounts.vaultRewardTokenAta.value = await getProgramDerivedAddress({
       programAddress:
         'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
       seeds: [
-        getAddressEncoder().encode(expectAddress(accounts.staker.value)),
+        getAddressEncoder().encode(expectAddress(accounts.stakingVault.value)),
         getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
         getAddressEncoder().encode(
           expectAddress(accounts.rewardTokenMint.value)
@@ -307,29 +316,27 @@ export async function getUnstakeInstructionAsync<
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   return Object.freeze({
     accounts: [
-      getAccountMeta(accounts.staker),
+      getAccountMeta(accounts.provider),
       getAccountMeta(accounts.stakingVault),
-      getAccountMeta(accounts.stakerTokenAta),
-      getAccountMeta(accounts.stakingVaultAta),
-      getAccountMeta(accounts.vaultRewardAta),
-      getAccountMeta(accounts.stakerRewardAta),
+      getAccountMeta(accounts.providerRewardTokensAta),
       getAccountMeta(accounts.rewardTokenMint),
+      getAccountMeta(accounts.vaultRewardTokenAta),
       getAccountMeta(accounts.stakingTokenMint),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getUnstakeInstructionDataEncoder().encode({}),
+    data: getOpenInstructionDataEncoder().encode(
+      args as OpenInstructionDataArgs
+    ),
     programAddress,
-  } as UnstakeInstruction<
+  } as OpenInstruction<
     TProgramAddress,
-    TAccountStaker,
+    TAccountProvider,
     TAccountStakingVault,
-    TAccountStakerTokenAta,
-    TAccountStakingVaultAta,
-    TAccountVaultRewardAta,
-    TAccountStakerRewardAta,
+    TAccountProviderRewardTokensAta,
     TAccountRewardTokenMint,
+    TAccountVaultRewardTokenAta,
     TAccountStakingTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -337,69 +344,64 @@ export async function getUnstakeInstructionAsync<
   >);
 }
 
-export type UnstakeInput<
-  TAccountStaker extends string = string,
+export type OpenInput<
+  TAccountProvider extends string = string,
   TAccountStakingVault extends string = string,
-  TAccountStakerTokenAta extends string = string,
-  TAccountStakingVaultAta extends string = string,
-  TAccountVaultRewardAta extends string = string,
-  TAccountStakerRewardAta extends string = string,
+  TAccountProviderRewardTokensAta extends string = string,
   TAccountRewardTokenMint extends string = string,
+  TAccountVaultRewardTokenAta extends string = string,
   TAccountStakingTokenMint extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
-  staker: TransactionSigner<TAccountStaker>;
+  provider: TransactionSigner<TAccountProvider>;
   stakingVault: Address<TAccountStakingVault>;
-  stakerTokenAta: Address<TAccountStakerTokenAta>;
-  stakingVaultAta: Address<TAccountStakingVaultAta>;
-  vaultRewardAta: Address<TAccountVaultRewardAta>;
-  stakerRewardAta: Address<TAccountStakerRewardAta>;
+  providerRewardTokensAta: Address<TAccountProviderRewardTokensAta>;
   rewardTokenMint: Address<TAccountRewardTokenMint>;
+  vaultRewardTokenAta: Address<TAccountVaultRewardTokenAta>;
   stakingTokenMint: Address<TAccountStakingTokenMint>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
+  duration: OpenInstructionDataArgs['duration'];
+  minAmount: OpenInstructionDataArgs['minAmount'];
+  maxAmount: OpenInstructionDataArgs['maxAmount'];
+  initialRewardsDeposit: OpenInstructionDataArgs['initialRewardsDeposit'];
+  staker: OpenInstructionDataArgs['staker'];
 };
 
-export function getUnstakeInstruction<
-  TAccountStaker extends string,
+export function getOpenInstruction<
+  TAccountProvider extends string,
   TAccountStakingVault extends string,
-  TAccountStakerTokenAta extends string,
-  TAccountStakingVaultAta extends string,
-  TAccountVaultRewardAta extends string,
-  TAccountStakerRewardAta extends string,
+  TAccountProviderRewardTokensAta extends string,
   TAccountRewardTokenMint extends string,
+  TAccountVaultRewardTokenAta extends string,
   TAccountStakingTokenMint extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof STAKING_VAULT_PROGRAM_ADDRESS,
 >(
-  input: UnstakeInput<
-    TAccountStaker,
+  input: OpenInput<
+    TAccountProvider,
     TAccountStakingVault,
-    TAccountStakerTokenAta,
-    TAccountStakingVaultAta,
-    TAccountVaultRewardAta,
-    TAccountStakerRewardAta,
+    TAccountProviderRewardTokensAta,
     TAccountRewardTokenMint,
+    TAccountVaultRewardTokenAta,
     TAccountStakingTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): UnstakeInstruction<
+): OpenInstruction<
   TProgramAddress,
-  TAccountStaker,
+  TAccountProvider,
   TAccountStakingVault,
-  TAccountStakerTokenAta,
-  TAccountStakingVaultAta,
-  TAccountVaultRewardAta,
-  TAccountStakerRewardAta,
+  TAccountProviderRewardTokensAta,
   TAccountRewardTokenMint,
+  TAccountVaultRewardTokenAta,
   TAccountStakingTokenMint,
   TAccountTokenProgram,
   TAccountAssociatedTokenProgram,
@@ -411,15 +413,19 @@ export function getUnstakeInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    staker: { value: input.staker ?? null, isWritable: true },
-    stakingVault: { value: input.stakingVault ?? null, isWritable: false },
-    stakerTokenAta: { value: input.stakerTokenAta ?? null, isWritable: true },
-    stakingVaultAta: { value: input.stakingVaultAta ?? null, isWritable: true },
-    vaultRewardAta: { value: input.vaultRewardAta ?? null, isWritable: true },
-    stakerRewardAta: { value: input.stakerRewardAta ?? null, isWritable: true },
+    provider: { value: input.provider ?? null, isWritable: true },
+    stakingVault: { value: input.stakingVault ?? null, isWritable: true },
+    providerRewardTokensAta: {
+      value: input.providerRewardTokensAta ?? null,
+      isWritable: true,
+    },
     rewardTokenMint: {
       value: input.rewardTokenMint ?? null,
       isWritable: false,
+    },
+    vaultRewardTokenAta: {
+      value: input.vaultRewardTokenAta ?? null,
+      isWritable: true,
     },
     stakingTokenMint: {
       value: input.stakingTokenMint ?? null,
@@ -436,6 +442,9 @@ export function getUnstakeInstruction<
     keyof typeof originalAccounts,
     ResolvedAccount
   >;
+
+  // Original args.
+  const args = { ...input };
 
   // Resolve default values.
   if (!accounts.tokenProgram.value) {
@@ -454,29 +463,27 @@ export function getUnstakeInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   return Object.freeze({
     accounts: [
-      getAccountMeta(accounts.staker),
+      getAccountMeta(accounts.provider),
       getAccountMeta(accounts.stakingVault),
-      getAccountMeta(accounts.stakerTokenAta),
-      getAccountMeta(accounts.stakingVaultAta),
-      getAccountMeta(accounts.vaultRewardAta),
-      getAccountMeta(accounts.stakerRewardAta),
+      getAccountMeta(accounts.providerRewardTokensAta),
       getAccountMeta(accounts.rewardTokenMint),
+      getAccountMeta(accounts.vaultRewardTokenAta),
       getAccountMeta(accounts.stakingTokenMint),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getUnstakeInstructionDataEncoder().encode({}),
+    data: getOpenInstructionDataEncoder().encode(
+      args as OpenInstructionDataArgs
+    ),
     programAddress,
-  } as UnstakeInstruction<
+  } as OpenInstruction<
     TProgramAddress,
-    TAccountStaker,
+    TAccountProvider,
     TAccountStakingVault,
-    TAccountStakerTokenAta,
-    TAccountStakingVaultAta,
-    TAccountVaultRewardAta,
-    TAccountStakerRewardAta,
+    TAccountProviderRewardTokensAta,
     TAccountRewardTokenMint,
+    TAccountVaultRewardTokenAta,
     TAccountStakingTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -484,36 +491,34 @@ export function getUnstakeInstruction<
   >);
 }
 
-export type ParsedUnstakeInstruction<
+export type ParsedOpenInstruction<
   TProgram extends string = typeof STAKING_VAULT_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
-    staker: TAccountMetas[0];
+    provider: TAccountMetas[0];
     stakingVault: TAccountMetas[1];
-    stakerTokenAta: TAccountMetas[2];
-    stakingVaultAta: TAccountMetas[3];
-    vaultRewardAta: TAccountMetas[4];
-    stakerRewardAta: TAccountMetas[5];
-    rewardTokenMint: TAccountMetas[6];
-    stakingTokenMint: TAccountMetas[7];
-    tokenProgram: TAccountMetas[8];
-    associatedTokenProgram: TAccountMetas[9];
-    systemProgram: TAccountMetas[10];
+    providerRewardTokensAta: TAccountMetas[2];
+    rewardTokenMint: TAccountMetas[3];
+    vaultRewardTokenAta: TAccountMetas[4];
+    stakingTokenMint: TAccountMetas[5];
+    tokenProgram: TAccountMetas[6];
+    associatedTokenProgram: TAccountMetas[7];
+    systemProgram: TAccountMetas[8];
   };
-  data: UnstakeInstructionData;
+  data: OpenInstructionData;
 };
 
-export function parseUnstakeInstruction<
+export function parseOpenInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
-): ParsedUnstakeInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 11) {
+): ParsedOpenInstruction<TProgram, TAccountMetas> {
+  if (instruction.accounts.length < 9) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -526,18 +531,16 @@ export function parseUnstakeInstruction<
   return {
     programAddress: instruction.programAddress,
     accounts: {
-      staker: getNextAccount(),
+      provider: getNextAccount(),
       stakingVault: getNextAccount(),
-      stakerTokenAta: getNextAccount(),
-      stakingVaultAta: getNextAccount(),
-      vaultRewardAta: getNextAccount(),
-      stakerRewardAta: getNextAccount(),
+      providerRewardTokensAta: getNextAccount(),
       rewardTokenMint: getNextAccount(),
+      vaultRewardTokenAta: getNextAccount(),
       stakingTokenMint: getNextAccount(),
       tokenProgram: getNextAccount(),
       associatedTokenProgram: getNextAccount(),
       systemProgram: getNextAccount(),
     },
-    data: getUnstakeInstructionDataDecoder().decode(instruction.data),
+    data: getOpenInstructionDataDecoder().decode(instruction.data),
   };
 }

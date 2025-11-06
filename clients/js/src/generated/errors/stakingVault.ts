@@ -11,7 +11,7 @@ import {
   type Address,
   type SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM,
   type SolanaError,
-} from 'gill';
+} from '@solana/kit';
 import { STAKING_VAULT_PROGRAM_ADDRESS } from '../programs';
 
 /** StakingPeriodNotCompleted: The staking period has not yet been completed. */

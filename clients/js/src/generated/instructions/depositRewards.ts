@@ -33,7 +33,7 @@ import {
   type TransactionSigner,
   type WritableAccount,
   type WritableSignerAccount,
-} from 'gill';
+} from '@solana/kit';
 import { STAKING_VAULT_PROGRAM_ADDRESS } from '../programs';
 import {
   expectAddress,
