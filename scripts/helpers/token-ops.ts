@@ -8,15 +8,18 @@ import {
   setTransactionMessageLifetimeUsingBlockhash,
   signTransactionMessageWithSigners,
   assertIsSendableTransaction,
+  Address,
 } from "@solana/kit";
 import { getCreateAccountInstruction } from "@solana-program/system";
 import {
+  getCreateAssociatedTokenIdempotentInstructionAsync,
   getInitializeMintInstruction,
   getMintSize,
+  getMintToInstruction,
   TOKEN_PROGRAM_ADDRESS,
 } from "@solana-program/token";
 
-export async function createMint(
+export async function createFungibleToken(
   client: Client,
   options: { decimals?: number }
 ) {
@@ -56,7 +59,7 @@ export async function createMint(
 
   const transaction = await signTransactionMessageWithSigners(txMsg);
   assertIsSendableTransaction(transaction);
-  
+
   await client.sendAndConfirmTransaction(
     {
       ...transaction,
@@ -66,6 +69,53 @@ export async function createMint(
     },
     { commitment: "confirmed" }
   );
-  return mint.address
 
+  return mint;
+}
+
+export async function mintFT(
+  client: Client,
+  to_ata: Address,
+  holder: Address,
+  mint: Address,
+) {
+  const mintInstructions = [
+    await getCreateAssociatedTokenIdempotentInstructionAsync({
+      mint,
+      payer: client.wallet,
+      owner: holder,
+    }),
+    getMintToInstruction({
+      mint: mint,
+      token: to_ata,
+      amount: BigInt(10 ** 10),
+      mintAuthority: client.wallet,
+    }),
+  ];
+
+  const { value: latestBlockhash } = await client.rpc
+    .getLatestBlockhash()
+    .send();
+  const txMsg = await pipe(
+    createTransactionMessage({ version: 0 }),
+    (tx) => setTransactionMessageFeePayer(client.wallet.address, tx),
+    (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+    (tx) => appendTransactionMessageInstructions(mintInstructions, tx),
+    (tx) => client.estimateAndSetComputeUnitLimit(tx)
+  );
+
+  const transaction = await signTransactionMessageWithSigners(txMsg);
+  assertIsSendableTransaction(transaction);
+
+  const tx = await client.sendAndConfirmTransaction(
+    {
+      ...transaction,
+      lifetimeConstraint: {
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      },
+    },
+    { commitment: "confirmed" }
+  );
+
+  console.log(tx);
 }

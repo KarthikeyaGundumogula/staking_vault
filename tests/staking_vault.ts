@@ -3,8 +3,6 @@ import { assert } from "chai";
 import { setUp, getAirdrop, program, connection, SetupResult } from "./utils";
 import provider_wallet from "../provider-wallet.json";
 import wallet from "../staker-wallet.json";
-
-import { createKeyPairFromBytes } from "gill";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
