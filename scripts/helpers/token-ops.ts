@@ -16,6 +16,7 @@ import {
   getInitializeMintInstruction,
   getMintSize,
   getMintToInstruction,
+  getTransferCheckedInstruction,
   TOKEN_PROGRAM_ADDRESS,
 } from "@solana-program/token";
 
@@ -118,4 +119,8 @@ export async function mintFT(
   );
 
   console.log(tx);
+}
+
+async function transferFt() {
+  
 }
