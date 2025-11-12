@@ -20,6 +20,8 @@ import {
   TOKEN_PROGRAM_ADDRESS,
 } from "@solana-program/token";
 
+import { getOpenInstruction } from "../../clients/js/src/generated";
+
 export async function createFungibleToken(
   client: Client,
   options: { decimals?: number }

@@ -79,7 +79,7 @@ impl<'info> UnStake<'info> {
         let provider = self.staking_vault.provider.key();
         let seeds = &[
             b"staking_vault",
-            provider.as_ref(),
+            provider.as_ref(),  
             &[self.staking_vault.bump],
         ];
         let signer = &[&seeds[..]];

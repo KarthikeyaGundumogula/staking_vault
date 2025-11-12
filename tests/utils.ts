@@ -41,6 +41,8 @@ export async function setUp(
   console.log("Provider: ", provider.publicKey.toBase58());
   console.log("Staker: ", staker.publicKey.toBase58());
   console.log("God: ", god.publicKey.toBase58());
+  await getAirdrop(connection,provider.publicKey,100000000000)
+  await getAirdrop(connection,staker.publicKey,10000000000000)
   const [vault_state_pda] = PublicKey.findProgramAddressSync(
     [Buffer.from("staking_vault"), provider.publicKey.toBuffer()],
     program.programId

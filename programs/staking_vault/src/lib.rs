@@ -11,17 +11,9 @@ use instructions::*;
 pub mod staking_vault {
     use super::*;
 
-    pub fn open(
-        ctx: Context<Open>,
-        duration: u64,
-        min_amount: u64,
-        max_amount: u64,
-        initial_rewards_deposit: u64,
-        staker:Pubkey
-    ) -> Result<()> {
-        ctx.accounts
-            .init_config(duration, min_amount, max_amount, ctx.bumps,staker)?;
-        ctx.accounts.deposit_rewards(initial_rewards_deposit)?;
+    pub fn open(ctx: Context<Open>, config: InitConfig) -> Result<()> {
+        ctx.accounts.init_config(config, ctx.bumps)?;
+        ctx.accounts.deposit_rewards()?;
         Ok(())
     }
 
@@ -44,13 +36,24 @@ pub mod staking_vault {
         Ok(())
     }
 
-    pub fn deposit_rewards(ctx: Context<DepositRewards>,amount:u64) -> Result<()> {
+    pub fn deposit_rewards(ctx: Context<DepositRewards>, amount: u64) -> Result<()> {
         ctx.accounts.deposit_rewards(amount)?;
         Ok(())
     }
 
-    pub fn increment_stake(ctx: Context<IncrementStake>,amount:u64) -> Result<()>{
+    pub fn increment_stake(ctx: Context<IncrementStake>, amount: u64) -> Result<()> {
         ctx.accounts.deposit_rewards(amount)?;
+        Ok(())
+    }
+
+    pub fn close_vault(ctx: Context<Close>) -> Result<()> {
+        let vault_reward_balance = ctx.accounts.vault_rewards_ata.amount;
+        let vault_staked_balance = ctx.accounts.vault_staking_ata.amount;
+        require!(
+            vault_reward_balance == vault_staked_balance && vault_reward_balance == 0,
+            StakingVaultError::VaultNotEmpty
+        );
+        ctx.accounts.close_vault_accounts()?;
         Ok(())
     }
 }
@@ -59,4 +62,6 @@ pub mod staking_vault {
 pub enum StakingVaultError {
     #[msg("The staking period has not yet been completed.")]
     StakingPeriodNotCompleted,
+    #[msg(" vault still holds tokens")]
+    VaultNotEmpty,
 }

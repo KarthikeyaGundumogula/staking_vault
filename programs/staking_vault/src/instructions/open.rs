@@ -44,28 +44,26 @@ pub struct Open<'info> {
 impl<'info> Open<'info> {
     pub fn init_config(
         &mut self,
-        duration: u64,
-        min_amount: u64,
-        max_amount: u64,
+        config:InitConfig,
         bumps: OpenBumps,
-        staker: Pubkey,
     ) -> Result<()> {
-      self.staking_vault.set_inner(StakingVault{
-        provider: self.provider.key(),
-        staker,
-        duration,
-        start_time: 0,
-        staking_mint: self.staking_token_mint.key(),
-        reward_mint: self.reward_token_mint.key(),
-        nft_mint: self.staking_token_mint.key(),
-        bump: bumps.staking_vault,
-        minimum_amount: min_amount,
-        maximum_amount: max_amount,
-        nft_id: 0, // will be set properly in future
-      });
-      Ok(())
+        self.staking_vault.set_inner(StakingVault {
+            provider: self.provider.key(),
+            staker:config.staker,
+            duration:config.duration,
+            start_time: 0,
+            rewards_value: config.initial_deposit,
+            staked_value:0,
+            staking_mint: self.staking_token_mint.key(),
+            reward_mint: self.reward_token_mint.key(),
+            nft_mint: self.staking_token_mint.key(),
+            bump: bumps.staking_vault,
+            minimum_amount: config.min_amount,
+            maximum_amount: config.max_amount,
+        });
+        Ok(())
     }
-    pub fn deposit_rewards(&mut self, deposit_amount: u64) -> Result<()> {
+    pub fn deposit_rewards(&mut self) -> Result<()> {
         let transfer_reward_accounts = TransferChecked {
             from: self.provider_reward_tokens_ata.to_account_info(),
             mint: self.reward_token_mint.to_account_info(),
@@ -77,11 +75,19 @@ impl<'info> Open<'info> {
             self.token_program.to_account_info(),
             transfer_reward_accounts,
         );
-
         transfer_checked(
             transfer_rewards_ctx,
-            deposit_amount,
+            self.staking_vault.rewards_value,
             self.reward_token_mint.decimals,
         )
     }
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize)]
+pub struct InitConfig{
+    pub duration:u64,
+    pub min_amount:u64,
+    pub max_amount:u64,
+    pub initial_deposit:u64,
+    pub staker:Pubkey,
 }

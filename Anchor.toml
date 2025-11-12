@@ -12,7 +12,7 @@ staking_vault = "6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
