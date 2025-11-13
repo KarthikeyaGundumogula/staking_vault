@@ -1,12 +1,12 @@
 [package]
-name = "staking_vault"
+name = "nft_marketplace"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "staking_vault"
+name = "nft_marketplace"
 
 [features]
 default = []
@@ -14,7 +14,7 @@ cpi = ["no-entrypoint"]
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
-idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+idl-build = ["anchor-lang/idl-build"]
 anchor-debug = []
 custom-heap = []
 custom-panic = []
@@ -22,8 +22,8 @@ custom-panic = []
 
 [dependencies]
 anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
-anchor-spl = "0.32.1"
-nft_marketplace = { path = "../nft_marketplace", features = ["cpi"] }
+mpl-core = { version = "0.11.1", features = ["anchor"] }
+
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [

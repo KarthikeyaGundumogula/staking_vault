@@ -60,8 +60,8 @@ pub mod staking_vault {
 
 #[error_code]
 pub enum StakingVaultError {
-    #[msg("The staking period has not yet been completed.")]
+    #[msg("The staking period not completed yet")]
     StakingPeriodNotCompleted,
-    #[msg(" vault still holds tokens")]
+    #[msg("Vault still holds tokens unstake first")]
     VaultNotEmpty,
 }

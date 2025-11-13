@@ -6,6 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
+nft_marketplace = "GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi"
 staking_vault = "6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu"
 
 [registry]
@@ -16,5 +17,5 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""
 generate-clients = "yarn ts-node ./scripts/generate-clients.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""

@@ -8,8 +8,9 @@ use anchor_spl::{
 #[derive(Accounts)]
 pub struct Close<'info> {
     pub provider: Signer<'info>,
+    /// CHECK the address is the staker is performing here only
     #[account( address = staking_vault.staker)]
-    pub staker: AccountInfo<'info>,
+    pub staker: UncheckedAccount<'info>,
     #[account(
       mut,
       close = provider,
