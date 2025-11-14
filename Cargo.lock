@@ -2897,6 +2897,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang 0.32.1",
  "anchor-spl",
+ "mpl-core",
  "nft_marketplace",
 ]
 

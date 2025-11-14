@@ -3,8 +3,8 @@ use mpl_core::{instructions::CreateV2CpiBuilder, ID as MPL_CORE_ID};
 
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub struct CreateAssetArgs {
-    name: String,
-    uri: String,
+    pub name: String,
+    pub uri: String,
 }
 
 #[derive(Accounts)]

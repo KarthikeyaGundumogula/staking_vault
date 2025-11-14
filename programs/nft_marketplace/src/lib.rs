@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-
 declare_id!("GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi");
 
 pub mod instructions;
@@ -27,7 +26,7 @@ pub mod nft_marketplace {
         Ok(())
     }
 
-    pub fn burn_asset(ctx:Context<BurnAsset>) -> Result<()> {
+    pub fn burn_asset(ctx: Context<BurnAsset>) -> Result<()> {
         ctx.accounts.burn()?;
         Ok(())
     }

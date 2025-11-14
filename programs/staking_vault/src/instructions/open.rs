@@ -1,4 +1,8 @@
 use crate::state::StakingVault;
+use nft_marketplace::cpi::accounts::CreateAsset;
+use nft_marketplace::instructions::CreateAssetArgs;
+use nft_marketplace::program::NftMarketplace;
+
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
@@ -35,25 +39,26 @@ pub struct Open<'info> {
       associated_token::token_program = token_program
     )]
     pub vault_reward_token_ata: InterfaceAccount<'info, TokenAccount>,
+    #[account(mut)]
+    pub asset: Signer<'info>,
     pub staking_token_mint: InterfaceAccount<'info, Mint>,
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
+    /// CHECK this account will be checked my the mpl_core_program
+    pub mpl_core_program: UncheckedAccount<'info>,
+    pub nft_marketplace: Program<'info, NftMarketplace>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> Open<'info> {
-    pub fn init_config(
-        &mut self,
-        config:InitConfig,
-        bumps: OpenBumps,
-    ) -> Result<()> {
+    pub fn init_config(&mut self, config: InitConfig, bumps: OpenBumps) -> Result<()> {
         self.staking_vault.set_inner(StakingVault {
             provider: self.provider.key(),
-            staker:config.staker,
-            duration:config.duration,
+            staker: config.staker,
+            duration: config.duration,
             start_time: 0,
             rewards_value: config.initial_deposit,
-            staked_value:0,
+            staked_value: 0,
             staking_mint: self.staking_token_mint.key(),
             reward_mint: self.reward_token_mint.key(),
             nft_mint: self.staking_token_mint.key(),
@@ -81,13 +86,43 @@ impl<'info> Open<'info> {
             self.reward_token_mint.decimals,
         )
     }
+
+    pub fn mint_asset(&mut self) -> Result<()> {
+        let mint_asset_accounts = CreateAsset {
+            asset: self.asset.to_account_info(),
+            payer: self.provider.to_account_info(),
+            owner: Some(self.staking_vault.to_account_info()),
+            system_program: self.system_program.to_account_info(),
+            mpl_core_program: self.mpl_core_program.to_account_info(),
+        };
+
+        let mint_cpi = CpiContext::new(self.nft_marketplace.to_account_info(), mint_asset_accounts);
+        let args = CreateAssetArgs {
+            name: String::from("Vault NFT"),
+            uri: String::from("MINT_URI"),
+        };
+
+        let res = nft_marketplace::cpi::create_core_asset(mint_cpi, args);
+
+        if res.is_ok() {
+            Ok(())
+        } else {
+            err!(StakingError::CPIFail)
+        }
+    }
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize)]
-pub struct InitConfig{
-    pub duration:u64,
-    pub min_amount:u64,
-    pub max_amount:u64,
-    pub initial_deposit:u64,
-    pub staker:Pubkey,
+pub struct InitConfig {
+    pub duration: u64,
+    pub min_amount: u64,
+    pub max_amount: u64,
+    pub initial_deposit: u64,
+    pub staker: Pubkey,
+}
+
+#[error_code]
+pub enum StakingError {
+    #[msg("Minting CPI failed")]
+    CPIFail,
 }
