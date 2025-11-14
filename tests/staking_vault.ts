@@ -1,6 +1,14 @@
 import * as anchor from "@coral-xyz/anchor";
 import { assert } from "chai";
-import { setUp, getAirdrop, program, connection, SetupResult } from "./utils";
+import {
+  setUp,
+  getAirdrop,
+  program,
+  nft_program,
+  connection,
+  SetupResult,
+} from "./utils";
+import { Keypair } from "@solana/web3.js";
 import provider_wallet from "../provider-wallet.json";
 import wallet from "../staker-wallet.json";
 import {
@@ -8,8 +16,14 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
+import {
+  MPL_CORE_PROGRAM_ID,
+  fetchAssetsByOwner,
+  fetchAsset,
+} from "@metaplex-foundation/mpl-core";
+import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 
-describe("staking_vault", () => {
+describe.only("staking_vault", () => {
   let setupData: SetupResult;
   let provider: anchor.web3.Keypair;
   let staker: anchor.web3.Keypair;
@@ -19,15 +33,19 @@ describe("staking_vault", () => {
   let stakeAccounts;
   let unStakeAccounts;
 
+  const umi = createUmi("http://0.0.0.0:8899", "confirmed");
   const TOKEN_DECIMALS = 1_000_000; // 6 decimals
   const duration = new anchor.BN(1); // 1 second for testing only
   const min_amount = new anchor.BN(1_000_000); // 1 token
   const max_amount = new anchor.BN(10_000_000_000); // 10,000 tokens
-  const initial_rewards_deposit = new anchor.BN(5_000_000_000); // 5,000 tokens
+  const initial_rewards_deposit = new anchor.BN(0); // 5,000 tokens
   const stake_amount = new anchor.BN(2_000_000_000); // 2,000 tokens
+  const asset = Keypair.generate();
 
   before(async () => {
-    provider = anchor.web3.Keypair.fromSecretKey(new Uint8Array(provider_wallet.provider));
+    provider = anchor.web3.Keypair.fromSecretKey(
+      new Uint8Array(provider_wallet.provider)
+    );
     staker = anchor.web3.Keypair.fromSecretKey(new Uint8Array(wallet.wallet));
     god = provider;
     un_authorized_staker = anchor.web3.Keypair.generate();
@@ -65,16 +83,44 @@ describe("staking_vault", () => {
   });
 
   it.only("Open Staking Vault", async () => {
+    let init_config = {
+      duration: duration,
+      minAmount: min_amount,
+      maxAmount: max_amount,
+      initialDeposit: initial_rewards_deposit,
+      staker: staker.publicKey,
+    };
+
     try {
       const tx = await program.methods
-        .open(duration, min_amount, max_amount, initial_rewards_deposit, staker.publicKey)
-        .accountsStrict(mintAccounts)
-        .signers([provider])
+        .open(init_config)
+        .accountsStrict({
+          provider: provider.publicKey,
+          staker:staker.publicKey,
+          stakingVault: setupData.vault_state_pda,
+          providerRewardTokensAta: setupData.provider_reward_ata,
+          rewardTokenMint: setupData.reward_mint,
+          vaultRewardTokenAta: setupData.vault_reward_ata,
+          stakingTokenMint: setupData.staking_mint,
+          asset: asset.publicKey,
+          mplCoreProgram: MPL_CORE_PROGRAM_ID,
+          nftMarketplace: nft_program.programId,
+          systemProgram: SYSTEM_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        })
+        .signers([provider, asset])
         .rpc();
     } catch (error) {
+      console.log(error);
       console.error("Error in opening staking vault: ", await error.getLogs());
     }
-
+    console.log(asset.publicKey);
+    const asset_data = await fetchAssetsByOwner(
+      umi,
+      staker.publicKey.toString()
+    );
+    console.log(asset_data);
     const vaultAccount = await program.account.stakingVault.fetch(
       setupData.vault_state_pda
     );
@@ -96,9 +142,9 @@ describe("staking_vault", () => {
     );
   });
 
-  it.only("Stake Tokens", async () => {
+  it("Stake Tokens", async () => {
     console.log("--Opening Vault--");
-    // run this sigle test for complete workflow testing 
+    // run this sigle test for complete workflow testing
     // try {
     //   const tx = await program.methods
     //     .open(duration, min_amount, max_amount, initial_rewards_deposit,staker.publicKey)
@@ -142,14 +188,13 @@ describe("staking_vault", () => {
     );
   });
 
-  it.only("Unstake Tokens", async () => {
+  it("Unstake Tokens", async () => {
     console.log("--Unstaking Tokens--");
     const staker_balance_pre_unstake = await connection.getTokenAccountBalance(
       setupData.staker_staking_ata
     );
-    const staker_reward_balance_pre_unstake = await connection.getTokenAccountBalance(
-      setupData.staker_reward_ata
-    );
+    const staker_reward_balance_pre_unstake =
+      await connection.getTokenAccountBalance(setupData.staker_reward_ata);
     try {
       const tx = await program.methods
         .unstake()
@@ -169,15 +214,14 @@ describe("staking_vault", () => {
         staker_balance_pre_unstake.value.uiAmount,
       stake_amount.toNumber() / TOKEN_DECIMALS
     );
-    
-    const staker_reward_balance_post_unstake = await connection.getTokenAccountBalance(
-      setupData.staker_reward_ata
-    );
+
+    const staker_reward_balance_post_unstake =
+      await connection.getTokenAccountBalance(setupData.staker_reward_ata);
     assert.isTrue(
       staker_reward_balance_post_unstake.value.uiAmount >
         staker_reward_balance_pre_unstake.value.uiAmount
     );
-  })
+  });
 
   it("Fail Stake from Unauthorized Staker", async () => {
     console.log("--Staking Tokens from Unauthorized Staker--");
@@ -192,8 +236,7 @@ describe("staking_vault", () => {
         .signers([un_authorized_staker])
         .rpc();
       console.error("Stake transaction should have failed but succeeded: ", tx);
-    }
-    catch (error) {
+    } catch (error) {
       console.error(
         "Error in staking tokens from unauthorized staker: ",
         error

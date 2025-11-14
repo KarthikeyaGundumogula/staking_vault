@@ -1,6 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { StakingVault } from "../target/types/staking_vault";
+import { NftMarketplace } from "../target/types/nft_marketplace";
 import { Commitment, Connection, PublicKey } from "@solana/web3.js";
 import {
   createMint,
@@ -18,6 +19,7 @@ export const local_connection = new Connection(
 );
 export const connection = anchor.getProvider().connection;
 export const program = anchor.workspace.stakingVault as Program<StakingVault>;
+export const nft_program = anchor.workspace.nftMarketplace as Program<NftMarketplace>;
 
 // Type for the return value of setUp
 export interface SetupResult {

@@ -12,8 +12,12 @@ pub mod staking_vault {
     use super::*;
 
     pub fn open(ctx: Context<Open>, config: InitConfig) -> Result<()> {
+        let deposit = &config.initial_deposit.clone();
         ctx.accounts.init_config(config, ctx.bumps)?;
-        ctx.accounts.deposit_rewards()?;
+        ctx.accounts.mint_asset()?;
+        if *deposit > 0 {
+            ctx.accounts.deposit_rewards()?
+        };
         Ok(())
     }
 

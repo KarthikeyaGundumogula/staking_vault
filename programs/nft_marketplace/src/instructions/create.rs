@@ -27,14 +27,15 @@ impl<'info> CreateAsset<'info> {
             Some(owner) => Some(owner.to_account_info()),
             None => None,
         };
+        msg!("asset minted");
 
         CreateV2CpiBuilder::new(&self.mpl_core_program.to_account_info())
             .asset(&self.asset.to_account_info())
             .collection(None)
-            .authority(owner.as_ref())
+            .authority(Some(&self.payer.to_account_info()))
             .payer(&self.payer.to_account_info())
             .owner(owner.as_ref())
-            .update_authority(None)
+            .update_authority(owner.as_ref())
             .system_program(&self.system_program.to_account_info())
             .name(args.name)
             .uri(args.uri)
