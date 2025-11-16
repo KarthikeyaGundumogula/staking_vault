@@ -9,8 +9,8 @@ import {
   SetupResult,
 } from "./utils";
 import { Keypair } from "@solana/web3.js";
-import provider_wallet from "../provider-wallet.json";
-import wallet from "../staker-wallet.json";
+// import provider_wallet from "../provider-wallet.json";
+// import wallet from "../staker-wallet.json";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
@@ -43,10 +43,12 @@ describe.only("staking_vault", () => {
   const asset = Keypair.generate();
 
   before(async () => {
-    provider = anchor.web3.Keypair.fromSecretKey(
-      new Uint8Array(provider_wallet.provider)
-    );
-    staker = anchor.web3.Keypair.fromSecretKey(new Uint8Array(wallet.wallet));
+    // provider = anchor.web3.Keypair.fromSecretKey(
+    //   new Uint8Array(provider_wallet.provider)
+    // );
+    // staker = anchor.web3.Keypair.fromSecretKey(new Uint8Array(wallet.wallet));
+    provider = anchor.web3.Keypair.generate();
+    staker = anchor.web3.Keypair.generate();
     god = provider;
     un_authorized_staker = anchor.web3.Keypair.generate();
 

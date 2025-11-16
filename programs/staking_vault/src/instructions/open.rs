@@ -21,7 +21,7 @@ pub struct Open<'info> {
       payer = provider,
       seeds = [b"staking_vault",provider.key().as_ref()],
       space = StakingVault::INIT_SPACE + 8,
-      bump
+      bump 
     )]
     pub staking_vault: Account<'info, StakingVault>,
     #[account(
