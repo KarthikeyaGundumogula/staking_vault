@@ -30,3 +30,6 @@ nft_marketplace = { path = "../nft_marketplace", features = ["cpi"] }
 unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(target_os, values("solana"))',
 ] }
+
+[dev-dependencies]
+litesvm = "0.8.1"

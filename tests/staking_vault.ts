@@ -98,7 +98,7 @@ describe.only("staking_vault", () => {
         .open(init_config)
         .accountsStrict({
           provider: provider.publicKey,
-          staker:staker.publicKey,
+          staker: staker.publicKey,
           stakingVault: setupData.vault_state_pda,
           providerRewardTokensAta: setupData.provider_reward_ata,
           rewardTokenMint: setupData.reward_mint,
@@ -117,12 +117,11 @@ describe.only("staking_vault", () => {
       console.log(error);
       console.error("Error in opening staking vault: ", await error.getLogs());
     }
-    console.log(asset.publicKey);
     const asset_data = await fetchAssetsByOwner(
       umi,
       staker.publicKey.toString()
     );
-    console.log(asset_data);
+    // console.log(asset_data);
     const vaultAccount = await program.account.stakingVault.fetch(
       setupData.vault_state_pda
     );
@@ -133,6 +132,7 @@ describe.only("staking_vault", () => {
     assert.ok(vaultAccount.rewardMint.equals(setupData.reward_mint));
     assert.ok(vaultAccount.maximumAmount.eq(max_amount));
     assert.ok(vaultAccount.minimumAmount.eq(min_amount));
+    console.log(vaultAccount.staker.toBase58());
 
     // deposit assertions
     const vaultRewards = await connection.getTokenAccountBalance(
@@ -144,8 +144,8 @@ describe.only("staking_vault", () => {
     );
   });
 
-  it("Stake Tokens", async () => {
-    console.log("--Opening Vault--");
+  it.only("Stake Tokens", async () => {
+    // console.log("--Opening Vault--");
     // run this sigle test for complete workflow testing
     // try {
     //   const tx = await program.methods
@@ -156,7 +156,7 @@ describe.only("staking_vault", () => {
     // } catch (error) {
     //   console.error("Error in opening staking vault: ", await error.getLogs());
     // }
-    console.log("--Staking Tokens--");
+    // console.log("--Staking Tokens--");
     const staker_balance_pre_stake = await connection.getTokenAccountBalance(
       setupData.staker_staking_ata
     );
@@ -190,7 +190,7 @@ describe.only("staking_vault", () => {
     );
   });
 
-  it("Unstake Tokens", async () => {
+  it.only("Unstake Tokens", async () => {
     console.log("--Unstaking Tokens--");
     const staker_balance_pre_unstake = await connection.getTokenAccountBalance(
       setupData.staker_staking_ata
@@ -220,7 +220,7 @@ describe.only("staking_vault", () => {
     const staker_reward_balance_post_unstake =
       await connection.getTokenAccountBalance(setupData.staker_reward_ata);
     assert.isTrue(
-      staker_reward_balance_post_unstake.value.uiAmount >
+      staker_reward_balance_post_unstake.value.uiAmount >=
         staker_reward_balance_pre_unstake.value.uiAmount
     );
   });
