@@ -14,15 +14,20 @@ import {
 } from 'gill';
 import { STAKING_VAULT_PROGRAM_ADDRESS } from '../programs';
 
-/** CPIFail: Minting CPI failed */
-export const STAKING_VAULT_ERROR__C_P_I_FAIL = 0x1770; // 6000
+/** StakingPeriodNotCompleted: The staking period not completed yet */
+export const STAKING_VAULT_ERROR__STAKING_PERIOD_NOT_COMPLETED = 0x1770; // 6000
+/** VaultNotEmpty: Vault still holds tokens unstake first */
+export const STAKING_VAULT_ERROR__VAULT_NOT_EMPTY = 0x1771; // 6001
 
-export type StakingVaultError = typeof STAKING_VAULT_ERROR__C_P_I_FAIL;
+export type StakingVaultError =
+  | typeof STAKING_VAULT_ERROR__STAKING_PERIOD_NOT_COMPLETED
+  | typeof STAKING_VAULT_ERROR__VAULT_NOT_EMPTY;
 
 let stakingVaultErrorMessages: Record<StakingVaultError, string> | undefined;
 if (process.env.NODE_ENV !== 'production') {
   stakingVaultErrorMessages = {
-    [STAKING_VAULT_ERROR__C_P_I_FAIL]: `Minting CPI failed`,
+    [STAKING_VAULT_ERROR__STAKING_PERIOD_NOT_COMPLETED]: `The staking period not completed yet`,
+    [STAKING_VAULT_ERROR__VAULT_NOT_EMPTY]: `Vault still holds tokens unstake first`,
   };
 }
 

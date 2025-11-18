@@ -1,31 +1,25 @@
-import type { Client } from "./client";
-import {
-  appendTransactionMessageInstructions,
-  createTransactionMessage,
-  generateKeyPairSigner,
-  pipe,
-  setTransactionMessageFeePayer,
-  setTransactionMessageLifetimeUsingBlockhash,
-  signTransactionMessageWithSigners,
-  assertIsSendableTransaction,
-  Address,
-} from "@solana/kit";
 import { getCreateAccountInstruction } from "@solana-program/system";
+import { Client, getClient, Token_Accounts } from "./setUp";
 import {
-  getCreateAssociatedTokenIdempotentInstructionAsync,
-  getInitializeMintInstruction,
-  getMintSize,
-  getMintToInstruction,
-  getTransferCheckedInstruction,
+  generateKeyPairSigner,
+  createTransaction,
+  Address,
+  getExplorerLink,
+  getSignatureFromTransaction,
+  signTransactionMessageWithSigners,
+} from "gill";
+import {
   TOKEN_PROGRAM_ADDRESS,
-} from "@solana-program/token";
-
-import { getOpenInstruction } from "../../clients/js/src/generated";
+  getTokenMetadataAddress,
+  getMintSize,
+  getInitializeMintInstruction,
+} from "gill/programs";
 
 export async function createFungibleToken(
-  client: Client,
-  options: { decimals?: number }
 ) {
+  let client = await getClient()
+
+  const tokenProgram = TOKEN_PROGRAM_ADDRESS;
   const mintSize = getMintSize();
   const [mint, rentExemption] = await Promise.all([
     generateKeyPairSigner(),
@@ -33,7 +27,7 @@ export async function createFungibleToken(
   ]);
 
   const createAccountIx = getCreateAccountInstruction({
-    payer: client.wallet,
+    payer: client.god,
     newAccount: mint,
     space: mintSize,
     lamports: rentExemption,
@@ -41,38 +35,49 @@ export async function createFungibleToken(
   });
   const initializeMintIx = getInitializeMintInstruction({
     mint: mint.address,
-    decimals: options.decimals ?? 0,
-    mintAuthority: client.wallet.address,
+    decimals: 9,
+    mintAuthority: client.god.address,
   });
 
   const { value: latestBlockhash } = await client.rpc
     .getLatestBlockhash()
     .send();
-  const txMsg = await pipe(
-    createTransactionMessage({ version: 0 }),
-    (tx) => setTransactionMessageFeePayer(client.wallet.address, tx),
-    (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-    (tx) =>
-      appendTransactionMessageInstructions(
-        [createAccountIx, initializeMintIx],
-        tx
+
+  const transaction = createTransaction({
+    feePayer: client.god,
+    version: "legacy",
+    instructions: [
+      getCreateAccountInstruction({
+        space: mintSize,
+        lamports: rentExemption,
+        newAccount: mint,
+        payer: client.god,
+        programAddress: tokenProgram,
+      }),
+      getInitializeMintInstruction(
+        {
+          mint: mint.address,
+          mintAuthority: client.god.address,
+          freezeAuthority: client.god.address,
+          decimals: 9,
+        },
+        {
+          programAddress: tokenProgram,
+        }
       ),
-    (tx) => client.estimateAndSetComputeUnitLimit(tx)
+    ],
+    latestBlockhash,
+  });
+
+  const signed_tx = await signTransactionMessageWithSigners(transaction);
+  await client.sendAndConfirmTransaction(signed_tx);
+  console.log(
+    "Explorer:",
+    getExplorerLink({
+      cluster: "devnet",
+      transaction: getSignatureFromTransaction(signed_tx),
+    })
   );
-
-  const transaction = await signTransactionMessageWithSigners(txMsg);
-  assertIsSendableTransaction(transaction);
-
-  await client.sendAndConfirmTransaction(
-    {
-      ...transaction,
-      lifetimeConstraint: {
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-      },
-    },
-    { commitment: "confirmed" }
-  );
-
   return mint;
 }
 
@@ -80,49 +85,9 @@ export async function mintFT(
   client: Client,
   to_ata: Address,
   holder: Address,
-  mint: Address,
-) {
-  const mintInstructions = [
-    await getCreateAssociatedTokenIdempotentInstructionAsync({
-      mint,
-      payer: client.wallet,
-      owner: holder,
-    }),
-    getMintToInstruction({
-      mint: mint,
-      token: to_ata,
-      amount: BigInt(10 ** 10),
-      mintAuthority: client.wallet,
-    }),
-  ];
+  mint: Address
+) {}
 
-  const { value: latestBlockhash } = await client.rpc
-    .getLatestBlockhash()
-    .send();
-  const txMsg = await pipe(
-    createTransactionMessage({ version: 0 }),
-    (tx) => setTransactionMessageFeePayer(client.wallet.address, tx),
-    (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-    (tx) => appendTransactionMessageInstructions(mintInstructions, tx),
-    (tx) => client.estimateAndSetComputeUnitLimit(tx)
-  );
+async function transferFt() { }
 
-  const transaction = await signTransactionMessageWithSigners(txMsg);
-  assertIsSendableTransaction(transaction);
-
-  const tx = await client.sendAndConfirmTransaction(
-    {
-      ...transaction,
-      lifetimeConstraint: {
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-      },
-    },
-    { commitment: "confirmed" }
-  );
-
-  console.log(tx);
-}
-
-async function transferFt() {
-  
-}
+createFungibleToken()

@@ -1,17 +1,21 @@
-import type { Client } from "./client";
 import {
-  Address,
-  createKeyPairSignerFromBytes,
+  generateKeyPairSigner,
+  type KeyPairSigner,
   getProgramDerivedAddress,
+  type Address,
   getAddressEncoder,
-  KeyPairSigner,
-} from "@solana/kit";
+  createSolanaClient,
+  Rpc,
+  SolanaRpcApi,
+  SendAndConfirmTransactionWithSignersFunction,
+} from "gill";
+import { loadKeypairSignerFromFile } from "gill/node";
 import {
   findAssociatedTokenPda,
   TOKEN_PROGRAM_ADDRESS,
 } from "@solana-program/token";
-import provider from "../../provider-wallet.json";
-import staker from "../../staker-wallet.json";
+// import provider from "../../provider-wallet.json";
+// import staker from "../../staker-wallet.json";
 
 export type Token_Accounts = {
   mint_address: Address;
@@ -20,19 +24,32 @@ export type Token_Accounts = {
   vault_ata: Address;
   receiver_ata: Address;
   vault_program_id: Address;
-  provider_acc:KeyPairSigner;
-  staker_acc:KeyPairSigner;
+  provider_acc: KeyPairSigner;
+  staker_acc: KeyPairSigner;
 };
+
+type CreateSolanaResult = ReturnType<typeof createSolanaClient>;
+
+export type Client = {
+  rpc: Rpc<SolanaRpcApi>;
+  sendAndConfirmTransaction: SendAndConfirmTransactionWithSignersFunction;
+  god: KeyPairSigner;
+};
+
+
+export async function getClient(): Promise<Client> {
+  const { rpc, sendAndConfirmTransaction } =
+    createSolanaClient({ urlOrMoniker: "localnet" });
+  const god = await loadKeypairSignerFromFile();
+
+  return { rpc, sendAndConfirmTransaction, god };
+}
 
 const STAKING_VAULT_ID = "6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu";
 
 export async function getAccounts(mint) {
-  const provider_acc = await createKeyPairSignerFromBytes(
-    new Uint8Array(provider.provider)
-  );
-  const staker_acc = await createKeyPairSignerFromBytes(
-    new Uint8Array(staker.wallet)
-  );
+  const provider_acc = await generateKeyPairSigner();
+  const staker_acc = await generateKeyPairSigner();
   const SEED = "staking_vault";
   const addressEncoder = getAddressEncoder();
 
@@ -70,7 +87,7 @@ export async function getAccounts(mint) {
     vault_acc: vault_state_pda,
     vault_program_id: STAKING_VAULT_ID as Address,
     provider_acc,
-    staker_acc
+    staker_acc,
   };
 
   return tokenAcc;

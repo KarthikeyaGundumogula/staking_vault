@@ -3,9 +3,9 @@
     "types": ["mocha", "chai", "node"],
     "typeRoots": ["./node_modules/@types"],
     "lib": ["es2015"],
-    "module": "commonjs",
+    "module": "nodenext",
     "target": "ESNext",
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
   }
 }
