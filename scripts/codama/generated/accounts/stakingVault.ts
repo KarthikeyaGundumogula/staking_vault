@@ -37,7 +37,7 @@ import {
   type MaybeAccount,
   type MaybeEncodedAccount,
   type ReadonlyUint8Array,
-} from '@solana/kit';
+} from 'gill';
 
 export const STAKING_VAULT_DISCRIMINATOR = new Uint8Array([
   68, 141, 118, 28, 87, 84, 213, 233,
@@ -57,11 +57,12 @@ export type StakingVault = {
   startTime: bigint;
   rewardMint: Address;
   stakingMint: Address;
-  nftId: bigint;
   nftMint: Address;
   bump: number;
   minimumAmount: bigint;
   maximumAmount: bigint;
+  rewardsValue: bigint;
+  stakedValue: bigint;
 };
 
 export type StakingVaultArgs = {
@@ -71,11 +72,12 @@ export type StakingVaultArgs = {
   startTime: number | bigint;
   rewardMint: Address;
   stakingMint: Address;
-  nftId: number | bigint;
   nftMint: Address;
   bump: number;
   minimumAmount: number | bigint;
   maximumAmount: number | bigint;
+  rewardsValue: number | bigint;
+  stakedValue: number | bigint;
 };
 
 export function getStakingVaultEncoder(): FixedSizeEncoder<StakingVaultArgs> {
@@ -88,11 +90,12 @@ export function getStakingVaultEncoder(): FixedSizeEncoder<StakingVaultArgs> {
       ['startTime', getU64Encoder()],
       ['rewardMint', getAddressEncoder()],
       ['stakingMint', getAddressEncoder()],
-      ['nftId', getU64Encoder()],
       ['nftMint', getAddressEncoder()],
       ['bump', getU8Encoder()],
       ['minimumAmount', getU64Encoder()],
       ['maximumAmount', getU64Encoder()],
+      ['rewardsValue', getU64Encoder()],
+      ['stakedValue', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: STAKING_VAULT_DISCRIMINATOR })
   );
@@ -107,11 +110,12 @@ export function getStakingVaultDecoder(): FixedSizeDecoder<StakingVault> {
     ['startTime', getU64Decoder()],
     ['rewardMint', getAddressDecoder()],
     ['stakingMint', getAddressDecoder()],
-    ['nftId', getU64Decoder()],
     ['nftMint', getAddressDecoder()],
     ['bump', getU8Decoder()],
     ['minimumAmount', getU64Decoder()],
     ['maximumAmount', getU64Decoder()],
+    ['rewardsValue', getU64Decoder()],
+    ['stakedValue', getU64Decoder()],
   ]);
 }
 
@@ -176,5 +180,5 @@ export async function fetchAllMaybeStakingVault(
 }
 
 export function getStakingVaultSize(): number {
-  return 209;
+  return 217;
 }

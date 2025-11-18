@@ -12,8 +12,9 @@ import {
   getBytesEncoder,
   type Address,
   type ReadonlyUint8Array,
-} from '@solana/kit';
+} from 'gill';
 import {
+  type ParsedCloseVaultInstruction,
   type ParsedDepositRewardsInstruction,
   type ParsedIncrementStakeInstruction,
   type ParsedOpenInstruction,
@@ -49,6 +50,7 @@ export function identifyStakingVaultAccount(
 }
 
 export enum StakingVaultInstruction {
+  CloseVault,
   DepositRewards,
   IncrementStake,
   Open,
@@ -60,6 +62,17 @@ export function identifyStakingVaultInstruction(
   instruction: { data: ReadonlyUint8Array } | ReadonlyUint8Array
 ): StakingVaultInstruction {
   const data = 'data' in instruction ? instruction.data : instruction;
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([141, 103, 17, 126, 72, 75, 29, 29])
+      ),
+      0
+    )
+  ) {
+    return StakingVaultInstruction.CloseVault;
+  }
   if (
     containsBytes(
       data,
@@ -123,6 +136,9 @@ export function identifyStakingVaultInstruction(
 export type ParsedStakingVaultInstruction<
   TProgram extends string = '6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu',
 > =
+  | ({
+      instructionType: StakingVaultInstruction.CloseVault;
+    } & ParsedCloseVaultInstruction<TProgram>)
   | ({
       instructionType: StakingVaultInstruction.DepositRewards;
     } & ParsedDepositRewardsInstruction<TProgram>)

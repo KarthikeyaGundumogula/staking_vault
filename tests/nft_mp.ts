@@ -12,7 +12,7 @@ import {
 import { assert } from "chai";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 
-describe("nft_escrow", () => {
+describe.only("nft_escrow", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
   const nft_program = anchor.workspace
@@ -27,7 +27,7 @@ describe("nft_escrow", () => {
   const receiver = Keypair.generate();
   const umi = createUmi("http://0.0.0.0:8899", "confirmed");
   let [vault] = PublicKey.findProgramAddressSync(
-    [Buffer.from("vault")],
+    [Buffer.from("vault"),receiver.publicKey.toBuffer()],
     nft_program.programId
   );
 
@@ -60,38 +60,40 @@ describe("nft_escrow", () => {
     console.log(asset_data);
   });
 
-  // it("Deposits NFT", async () => {
-  //   console.log(vault);
-  //   const transferAssetInstruction = await program.methods
-  //     .depositAsset(receiver.publicKey)
-  //     .accountsStrict({
-  //       asset: asset.publicKey,
-  //       collection: null,
-  //       payer: wallet.publicKey,
-  //       authority: null,
-  //       newOwner: vault,
-  //       systemProgram: SystemProgram.programId,
-  //       mplCoreProgram: MPL_CORE_PROGRAM_ID,
-  //       vault: vault,
-  //     })
-  //     .signers([wallet.payer])
-  //     .rpc();
-  //   console.log(transferAssetInstruction);
+  it("Deposits NFT", async () => {
+    console.log(vault.toBase58());
+    console.log(wallet.publicKey);
+    try {
+      const transferAssetInstruction = await nft_program.methods
+        .depositAsset()
+        .accountsStrict({
+          asset: asset.publicKey,
+          receiver:receiver.publicKey,
+          payer: wallet.publicKey,
+          newOwner: vault,
+          systemProgram: SystemProgram.programId,
+          mplCoreProgram: MPL_CORE_PROGRAM_ID,
+          vault: vault,
+        })
+        .signers([wallet.payer])
+        .rpc();
+      console.log(transferAssetInstruction);
+    } catch (error) {
+      console.error(error)
+      console.error(error.getLogs());
+    }
 
-  //   const vault_data = await program.account.vault.fetch(vault);
-  //   assert.ok(vault_data.receiver.equals(receiver.publicKey));
 
-  //   // log all the details
-  //   console.log("payer address",wallet.publicKey);
-  //   console.log("receiver",receiver.publicKey);
-  //   console.log("vault",vault);
-  //   console.log("asset", asset.publicKey);
+    const vault_data = await nft_program.account.vault.fetch(vault);
+    console.log(vault_data)
+    // assert.ok(vault_data.receiver.equals(receiver.publicKey));
 
-  //    const assetAccount = await program.provider.connection.getAccountInfo(
-  //      asset.publicKey
-  //    );
+    console.log("vault address", vault.toBase58);
+    let asset_data = await fetchAsset(umi, asset.publicKey.toString());
+    console.log(asset_data);
+    assert.equal(vault.toBase58(), asset_data.owner as unknown as string);
 
-  // });
+  });
 
   // it("Claims NFT", async () => {
   //   const transferAssetInstruction = await program.methods

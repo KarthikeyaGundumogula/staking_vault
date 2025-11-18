@@ -3,6 +3,7 @@ declare_id!("GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi");
 
 pub mod instructions;
 pub mod state;
+// pub mod tests;
 
 use instructions::*;
 
@@ -16,8 +17,8 @@ pub mod nft_marketplace {
         Ok(())
     }
 
-    pub fn deposit_asset(ctx: Context<DepositAsset>, receiver: Pubkey) -> Result<()> {
-        ctx.accounts.deposit(receiver, ctx.bumps)?;
+    pub fn deposit_asset(ctx: Context<DepositAsset>) -> Result<()> {
+        ctx.accounts.deposit(ctx.bumps)?;
         Ok(())
     }
 

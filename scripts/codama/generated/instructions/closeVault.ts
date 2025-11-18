@@ -27,11 +27,11 @@ import {
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
+  type ReadonlySignerAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
   type WritableAccount,
-  type WritableSignerAccount,
-} from '@solana/kit';
+} from 'gill';
 import { STAKING_VAULT_PROGRAM_ADDRESS } from '../programs';
 import {
   expectAddress,
@@ -39,30 +39,36 @@ import {
   type ResolvedAccount,
 } from '../shared';
 
-export const UNSTAKE_DISCRIMINATOR = new Uint8Array([
-  90, 95, 107, 42, 205, 124, 50, 225,
+export const CLOSE_VAULT_DISCRIMINATOR = new Uint8Array([
+  141, 103, 17, 126, 72, 75, 29, 29,
 ]);
 
-export function getUnstakeDiscriminatorBytes() {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(UNSTAKE_DISCRIMINATOR);
+export function getCloseVaultDiscriminatorBytes() {
+  return fixEncoderSize(getBytesEncoder(), 8).encode(CLOSE_VAULT_DISCRIMINATOR);
 }
 
-export type UnstakeInstruction<
+export type CloseVaultInstruction<
   TProgram extends string = typeof STAKING_VAULT_PROGRAM_ADDRESS,
+  TAccountProvider extends string | AccountMeta<string> = string,
   TAccountStaker extends string | AccountMeta<string> = string,
+  TAccountNft extends string | AccountMeta<string> = string,
   TAccountStakingVault extends string | AccountMeta<string> = string,
-  TAccountStakerTokenAta extends string | AccountMeta<string> = string,
-  TAccountStakingVaultAta extends string | AccountMeta<string> = string,
-  TAccountVaultRewardAta extends string | AccountMeta<string> = string,
-  TAccountStakerRewardAta extends string | AccountMeta<string> = string,
-  TAccountRewardTokenMint extends string | AccountMeta<string> = string,
+  TAccountVaultRewardsAta extends string | AccountMeta<string> = string,
+  TAccountVaultStakingAta extends string | AccountMeta<string> = string,
   TAccountStakingTokenMint extends string | AccountMeta<string> = string,
+  TAccountRewardTokenMint extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends
     | string
     | AccountMeta<string> = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
   TAccountAssociatedTokenProgram extends
     | string
     | AccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+  TAccountMplCoreProgram extends
+    | string
+    | AccountMeta<string> = 'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d',
+  TAccountNftMarketplace extends
+    | string
+    | AccountMeta<string> = 'GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi',
   TAccountSystemProgram extends
     | string
     | AccountMeta<string> = '11111111111111111111111111111111',
@@ -71,37 +77,41 @@ export type UnstakeInstruction<
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
+      TAccountProvider extends string
+        ? ReadonlyAccount<TAccountProvider>
+        : TAccountProvider,
       TAccountStaker extends string
-        ? WritableSignerAccount<TAccountStaker> &
+        ? ReadonlySignerAccount<TAccountStaker> &
             AccountSignerMeta<TAccountStaker>
         : TAccountStaker,
+      TAccountNft extends string ? ReadonlyAccount<TAccountNft> : TAccountNft,
       TAccountStakingVault extends string
-        ? ReadonlyAccount<TAccountStakingVault>
+        ? WritableAccount<TAccountStakingVault>
         : TAccountStakingVault,
-      TAccountStakerTokenAta extends string
-        ? WritableAccount<TAccountStakerTokenAta>
-        : TAccountStakerTokenAta,
-      TAccountStakingVaultAta extends string
-        ? WritableAccount<TAccountStakingVaultAta>
-        : TAccountStakingVaultAta,
-      TAccountVaultRewardAta extends string
-        ? WritableAccount<TAccountVaultRewardAta>
-        : TAccountVaultRewardAta,
-      TAccountStakerRewardAta extends string
-        ? WritableAccount<TAccountStakerRewardAta>
-        : TAccountStakerRewardAta,
-      TAccountRewardTokenMint extends string
-        ? ReadonlyAccount<TAccountRewardTokenMint>
-        : TAccountRewardTokenMint,
+      TAccountVaultRewardsAta extends string
+        ? WritableAccount<TAccountVaultRewardsAta>
+        : TAccountVaultRewardsAta,
+      TAccountVaultStakingAta extends string
+        ? WritableAccount<TAccountVaultStakingAta>
+        : TAccountVaultStakingAta,
       TAccountStakingTokenMint extends string
         ? ReadonlyAccount<TAccountStakingTokenMint>
         : TAccountStakingTokenMint,
+      TAccountRewardTokenMint extends string
+        ? ReadonlyAccount<TAccountRewardTokenMint>
+        : TAccountRewardTokenMint,
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
       TAccountAssociatedTokenProgram extends string
         ? ReadonlyAccount<TAccountAssociatedTokenProgram>
         : TAccountAssociatedTokenProgram,
+      TAccountMplCoreProgram extends string
+        ? ReadonlyAccount<TAccountMplCoreProgram>
+        : TAccountMplCoreProgram,
+      TAccountNftMarketplace extends string
+        ? ReadonlyAccount<TAccountNftMarketplace>
+        : TAccountNftMarketplace,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
@@ -109,100 +119,113 @@ export type UnstakeInstruction<
     ]
   >;
 
-export type UnstakeInstructionData = { discriminator: ReadonlyUint8Array };
+export type CloseVaultInstructionData = { discriminator: ReadonlyUint8Array };
 
-export type UnstakeInstructionDataArgs = {};
+export type CloseVaultInstructionDataArgs = {};
 
-export function getUnstakeInstructionDataEncoder(): FixedSizeEncoder<UnstakeInstructionDataArgs> {
+export function getCloseVaultInstructionDataEncoder(): FixedSizeEncoder<CloseVaultInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)]]),
-    (value) => ({ ...value, discriminator: UNSTAKE_DISCRIMINATOR })
+    (value) => ({ ...value, discriminator: CLOSE_VAULT_DISCRIMINATOR })
   );
 }
 
-export function getUnstakeInstructionDataDecoder(): FixedSizeDecoder<UnstakeInstructionData> {
+export function getCloseVaultInstructionDataDecoder(): FixedSizeDecoder<CloseVaultInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
   ]);
 }
 
-export function getUnstakeInstructionDataCodec(): FixedSizeCodec<
-  UnstakeInstructionDataArgs,
-  UnstakeInstructionData
+export function getCloseVaultInstructionDataCodec(): FixedSizeCodec<
+  CloseVaultInstructionDataArgs,
+  CloseVaultInstructionData
 > {
   return combineCodec(
-    getUnstakeInstructionDataEncoder(),
-    getUnstakeInstructionDataDecoder()
+    getCloseVaultInstructionDataEncoder(),
+    getCloseVaultInstructionDataDecoder()
   );
 }
 
-export type UnstakeAsyncInput<
+export type CloseVaultAsyncInput<
+  TAccountProvider extends string = string,
   TAccountStaker extends string = string,
+  TAccountNft extends string = string,
   TAccountStakingVault extends string = string,
-  TAccountStakerTokenAta extends string = string,
-  TAccountStakingVaultAta extends string = string,
-  TAccountVaultRewardAta extends string = string,
-  TAccountStakerRewardAta extends string = string,
-  TAccountRewardTokenMint extends string = string,
+  TAccountVaultRewardsAta extends string = string,
+  TAccountVaultStakingAta extends string = string,
   TAccountStakingTokenMint extends string = string,
+  TAccountRewardTokenMint extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
+  TAccountMplCoreProgram extends string = string,
+  TAccountNftMarketplace extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
+  /** CHECK checked address of the provider */
+  provider: Address<TAccountProvider>;
   staker: TransactionSigner<TAccountStaker>;
+  /** CHECK this will be cheked by the MPL-Program */
+  nft: Address<TAccountNft>;
   stakingVault: Address<TAccountStakingVault>;
-  stakerTokenAta?: Address<TAccountStakerTokenAta>;
-  stakingVaultAta?: Address<TAccountStakingVaultAta>;
-  vaultRewardAta?: Address<TAccountVaultRewardAta>;
-  stakerRewardAta?: Address<TAccountStakerRewardAta>;
-  rewardTokenMint: Address<TAccountRewardTokenMint>;
+  vaultRewardsAta?: Address<TAccountVaultRewardsAta>;
+  vaultStakingAta?: Address<TAccountVaultStakingAta>;
   stakingTokenMint: Address<TAccountStakingTokenMint>;
+  rewardTokenMint: Address<TAccountRewardTokenMint>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
+  /** CHECK this will be cheked at marketplace */
+  mplCoreProgram?: Address<TAccountMplCoreProgram>;
+  nftMarketplace?: Address<TAccountNftMarketplace>;
   systemProgram?: Address<TAccountSystemProgram>;
 };
 
-export async function getUnstakeInstructionAsync<
+export async function getCloseVaultInstructionAsync<
+  TAccountProvider extends string,
   TAccountStaker extends string,
+  TAccountNft extends string,
   TAccountStakingVault extends string,
-  TAccountStakerTokenAta extends string,
-  TAccountStakingVaultAta extends string,
-  TAccountVaultRewardAta extends string,
-  TAccountStakerRewardAta extends string,
-  TAccountRewardTokenMint extends string,
+  TAccountVaultRewardsAta extends string,
+  TAccountVaultStakingAta extends string,
   TAccountStakingTokenMint extends string,
+  TAccountRewardTokenMint extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
+  TAccountMplCoreProgram extends string,
+  TAccountNftMarketplace extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof STAKING_VAULT_PROGRAM_ADDRESS,
 >(
-  input: UnstakeAsyncInput<
+  input: CloseVaultAsyncInput<
+    TAccountProvider,
     TAccountStaker,
+    TAccountNft,
     TAccountStakingVault,
-    TAccountStakerTokenAta,
-    TAccountStakingVaultAta,
-    TAccountVaultRewardAta,
-    TAccountStakerRewardAta,
-    TAccountRewardTokenMint,
+    TAccountVaultRewardsAta,
+    TAccountVaultStakingAta,
     TAccountStakingTokenMint,
+    TAccountRewardTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
+    TAccountMplCoreProgram,
+    TAccountNftMarketplace,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): Promise<
-  UnstakeInstruction<
+  CloseVaultInstruction<
     TProgramAddress,
+    TAccountProvider,
     TAccountStaker,
+    TAccountNft,
     TAccountStakingVault,
-    TAccountStakerTokenAta,
-    TAccountStakingVaultAta,
-    TAccountVaultRewardAta,
-    TAccountStakerRewardAta,
-    TAccountRewardTokenMint,
+    TAccountVaultRewardsAta,
+    TAccountVaultStakingAta,
     TAccountStakingTokenMint,
+    TAccountRewardTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
+    TAccountMplCoreProgram,
+    TAccountNftMarketplace,
     TAccountSystemProgram
   >
 > {
@@ -212,18 +235,18 @@ export async function getUnstakeInstructionAsync<
 
   // Original accounts.
   const originalAccounts = {
-    staker: { value: input.staker ?? null, isWritable: true },
-    stakingVault: { value: input.stakingVault ?? null, isWritable: false },
-    stakerTokenAta: { value: input.stakerTokenAta ?? null, isWritable: true },
-    stakingVaultAta: { value: input.stakingVaultAta ?? null, isWritable: true },
-    vaultRewardAta: { value: input.vaultRewardAta ?? null, isWritable: true },
-    stakerRewardAta: { value: input.stakerRewardAta ?? null, isWritable: true },
-    rewardTokenMint: {
-      value: input.rewardTokenMint ?? null,
-      isWritable: false,
-    },
+    provider: { value: input.provider ?? null, isWritable: false },
+    staker: { value: input.staker ?? null, isWritable: false },
+    nft: { value: input.nft ?? null, isWritable: false },
+    stakingVault: { value: input.stakingVault ?? null, isWritable: true },
+    vaultRewardsAta: { value: input.vaultRewardsAta ?? null, isWritable: true },
+    vaultStakingAta: { value: input.vaultStakingAta ?? null, isWritable: true },
     stakingTokenMint: {
       value: input.stakingTokenMint ?? null,
+      isWritable: false,
+    },
+    rewardTokenMint: {
+      value: input.rewardTokenMint ?? null,
       isWritable: false,
     },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
@@ -231,6 +254,8 @@ export async function getUnstakeInstructionAsync<
       value: input.associatedTokenProgram ?? null,
       isWritable: false,
     },
+    mplCoreProgram: { value: input.mplCoreProgram ?? null, isWritable: false },
+    nftMarketplace: { value: input.nftMarketplace ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -243,34 +268,8 @@ export async function getUnstakeInstructionAsync<
     accounts.tokenProgram.value =
       'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as Address<'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'>;
   }
-  if (!accounts.stakerTokenAta.value) {
-    accounts.stakerTokenAta.value = await getProgramDerivedAddress({
-      programAddress:
-        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
-      seeds: [
-        getAddressEncoder().encode(expectAddress(accounts.staker.value)),
-        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
-        getAddressEncoder().encode(
-          expectAddress(accounts.stakingTokenMint.value)
-        ),
-      ],
-    });
-  }
-  if (!accounts.stakingVaultAta.value) {
-    accounts.stakingVaultAta.value = await getProgramDerivedAddress({
-      programAddress:
-        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
-      seeds: [
-        getAddressEncoder().encode(expectAddress(accounts.stakingVault.value)),
-        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
-        getAddressEncoder().encode(
-          expectAddress(accounts.stakingTokenMint.value)
-        ),
-      ],
-    });
-  }
-  if (!accounts.vaultRewardAta.value) {
-    accounts.vaultRewardAta.value = await getProgramDerivedAddress({
+  if (!accounts.vaultRewardsAta.value) {
+    accounts.vaultRewardsAta.value = await getProgramDerivedAddress({
       programAddress:
         'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
       seeds: [
@@ -282,15 +281,15 @@ export async function getUnstakeInstructionAsync<
       ],
     });
   }
-  if (!accounts.stakerRewardAta.value) {
-    accounts.stakerRewardAta.value = await getProgramDerivedAddress({
+  if (!accounts.vaultStakingAta.value) {
+    accounts.vaultStakingAta.value = await getProgramDerivedAddress({
       programAddress:
         'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
       seeds: [
-        getAddressEncoder().encode(expectAddress(accounts.staker.value)),
+        getAddressEncoder().encode(expectAddress(accounts.stakingVault.value)),
         getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
         getAddressEncoder().encode(
-          expectAddress(accounts.rewardTokenMint.value)
+          expectAddress(accounts.stakingTokenMint.value)
         ),
       ],
     });
@@ -298,6 +297,14 @@ export async function getUnstakeInstructionAsync<
   if (!accounts.associatedTokenProgram.value) {
     accounts.associatedTokenProgram.value =
       'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
+  }
+  if (!accounts.mplCoreProgram.value) {
+    accounts.mplCoreProgram.value =
+      'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d' as Address<'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d'>;
+  }
+  if (!accounts.nftMarketplace.value) {
+    accounts.nftMarketplace.value =
+      'GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi' as Address<'GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi'>;
   }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
@@ -307,102 +314,119 @@ export async function getUnstakeInstructionAsync<
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   return Object.freeze({
     accounts: [
+      getAccountMeta(accounts.provider),
       getAccountMeta(accounts.staker),
+      getAccountMeta(accounts.nft),
       getAccountMeta(accounts.stakingVault),
-      getAccountMeta(accounts.stakerTokenAta),
-      getAccountMeta(accounts.stakingVaultAta),
-      getAccountMeta(accounts.vaultRewardAta),
-      getAccountMeta(accounts.stakerRewardAta),
-      getAccountMeta(accounts.rewardTokenMint),
+      getAccountMeta(accounts.vaultRewardsAta),
+      getAccountMeta(accounts.vaultStakingAta),
       getAccountMeta(accounts.stakingTokenMint),
+      getAccountMeta(accounts.rewardTokenMint),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
+      getAccountMeta(accounts.mplCoreProgram),
+      getAccountMeta(accounts.nftMarketplace),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getUnstakeInstructionDataEncoder().encode({}),
+    data: getCloseVaultInstructionDataEncoder().encode({}),
     programAddress,
-  } as UnstakeInstruction<
+  } as CloseVaultInstruction<
     TProgramAddress,
+    TAccountProvider,
     TAccountStaker,
+    TAccountNft,
     TAccountStakingVault,
-    TAccountStakerTokenAta,
-    TAccountStakingVaultAta,
-    TAccountVaultRewardAta,
-    TAccountStakerRewardAta,
-    TAccountRewardTokenMint,
+    TAccountVaultRewardsAta,
+    TAccountVaultStakingAta,
     TAccountStakingTokenMint,
+    TAccountRewardTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
+    TAccountMplCoreProgram,
+    TAccountNftMarketplace,
     TAccountSystemProgram
   >);
 }
 
-export type UnstakeInput<
+export type CloseVaultInput<
+  TAccountProvider extends string = string,
   TAccountStaker extends string = string,
+  TAccountNft extends string = string,
   TAccountStakingVault extends string = string,
-  TAccountStakerTokenAta extends string = string,
-  TAccountStakingVaultAta extends string = string,
-  TAccountVaultRewardAta extends string = string,
-  TAccountStakerRewardAta extends string = string,
-  TAccountRewardTokenMint extends string = string,
+  TAccountVaultRewardsAta extends string = string,
+  TAccountVaultStakingAta extends string = string,
   TAccountStakingTokenMint extends string = string,
+  TAccountRewardTokenMint extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
+  TAccountMplCoreProgram extends string = string,
+  TAccountNftMarketplace extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
+  /** CHECK checked address of the provider */
+  provider: Address<TAccountProvider>;
   staker: TransactionSigner<TAccountStaker>;
+  /** CHECK this will be cheked by the MPL-Program */
+  nft: Address<TAccountNft>;
   stakingVault: Address<TAccountStakingVault>;
-  stakerTokenAta: Address<TAccountStakerTokenAta>;
-  stakingVaultAta: Address<TAccountStakingVaultAta>;
-  vaultRewardAta: Address<TAccountVaultRewardAta>;
-  stakerRewardAta: Address<TAccountStakerRewardAta>;
-  rewardTokenMint: Address<TAccountRewardTokenMint>;
+  vaultRewardsAta: Address<TAccountVaultRewardsAta>;
+  vaultStakingAta: Address<TAccountVaultStakingAta>;
   stakingTokenMint: Address<TAccountStakingTokenMint>;
+  rewardTokenMint: Address<TAccountRewardTokenMint>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
+  /** CHECK this will be cheked at marketplace */
+  mplCoreProgram?: Address<TAccountMplCoreProgram>;
+  nftMarketplace?: Address<TAccountNftMarketplace>;
   systemProgram?: Address<TAccountSystemProgram>;
 };
 
-export function getUnstakeInstruction<
+export function getCloseVaultInstruction<
+  TAccountProvider extends string,
   TAccountStaker extends string,
+  TAccountNft extends string,
   TAccountStakingVault extends string,
-  TAccountStakerTokenAta extends string,
-  TAccountStakingVaultAta extends string,
-  TAccountVaultRewardAta extends string,
-  TAccountStakerRewardAta extends string,
-  TAccountRewardTokenMint extends string,
+  TAccountVaultRewardsAta extends string,
+  TAccountVaultStakingAta extends string,
   TAccountStakingTokenMint extends string,
+  TAccountRewardTokenMint extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
+  TAccountMplCoreProgram extends string,
+  TAccountNftMarketplace extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof STAKING_VAULT_PROGRAM_ADDRESS,
 >(
-  input: UnstakeInput<
+  input: CloseVaultInput<
+    TAccountProvider,
     TAccountStaker,
+    TAccountNft,
     TAccountStakingVault,
-    TAccountStakerTokenAta,
-    TAccountStakingVaultAta,
-    TAccountVaultRewardAta,
-    TAccountStakerRewardAta,
-    TAccountRewardTokenMint,
+    TAccountVaultRewardsAta,
+    TAccountVaultStakingAta,
     TAccountStakingTokenMint,
+    TAccountRewardTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
+    TAccountMplCoreProgram,
+    TAccountNftMarketplace,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): UnstakeInstruction<
+): CloseVaultInstruction<
   TProgramAddress,
+  TAccountProvider,
   TAccountStaker,
+  TAccountNft,
   TAccountStakingVault,
-  TAccountStakerTokenAta,
-  TAccountStakingVaultAta,
-  TAccountVaultRewardAta,
-  TAccountStakerRewardAta,
-  TAccountRewardTokenMint,
+  TAccountVaultRewardsAta,
+  TAccountVaultStakingAta,
   TAccountStakingTokenMint,
+  TAccountRewardTokenMint,
   TAccountTokenProgram,
   TAccountAssociatedTokenProgram,
+  TAccountMplCoreProgram,
+  TAccountNftMarketplace,
   TAccountSystemProgram
 > {
   // Program address.
@@ -411,18 +435,18 @@ export function getUnstakeInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    staker: { value: input.staker ?? null, isWritable: true },
-    stakingVault: { value: input.stakingVault ?? null, isWritable: false },
-    stakerTokenAta: { value: input.stakerTokenAta ?? null, isWritable: true },
-    stakingVaultAta: { value: input.stakingVaultAta ?? null, isWritable: true },
-    vaultRewardAta: { value: input.vaultRewardAta ?? null, isWritable: true },
-    stakerRewardAta: { value: input.stakerRewardAta ?? null, isWritable: true },
-    rewardTokenMint: {
-      value: input.rewardTokenMint ?? null,
-      isWritable: false,
-    },
+    provider: { value: input.provider ?? null, isWritable: false },
+    staker: { value: input.staker ?? null, isWritable: false },
+    nft: { value: input.nft ?? null, isWritable: false },
+    stakingVault: { value: input.stakingVault ?? null, isWritable: true },
+    vaultRewardsAta: { value: input.vaultRewardsAta ?? null, isWritable: true },
+    vaultStakingAta: { value: input.vaultStakingAta ?? null, isWritable: true },
     stakingTokenMint: {
       value: input.stakingTokenMint ?? null,
+      isWritable: false,
+    },
+    rewardTokenMint: {
+      value: input.rewardTokenMint ?? null,
       isWritable: false,
     },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
@@ -430,6 +454,8 @@ export function getUnstakeInstruction<
       value: input.associatedTokenProgram ?? null,
       isWritable: false,
     },
+    mplCoreProgram: { value: input.mplCoreProgram ?? null, isWritable: false },
+    nftMarketplace: { value: input.nftMarketplace ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -446,6 +472,14 @@ export function getUnstakeInstruction<
     accounts.associatedTokenProgram.value =
       'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
   }
+  if (!accounts.mplCoreProgram.value) {
+    accounts.mplCoreProgram.value =
+      'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d' as Address<'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d'>;
+  }
+  if (!accounts.nftMarketplace.value) {
+    accounts.nftMarketplace.value =
+      'GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi' as Address<'GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi'>;
+  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
@@ -454,66 +488,75 @@ export function getUnstakeInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   return Object.freeze({
     accounts: [
+      getAccountMeta(accounts.provider),
       getAccountMeta(accounts.staker),
+      getAccountMeta(accounts.nft),
       getAccountMeta(accounts.stakingVault),
-      getAccountMeta(accounts.stakerTokenAta),
-      getAccountMeta(accounts.stakingVaultAta),
-      getAccountMeta(accounts.vaultRewardAta),
-      getAccountMeta(accounts.stakerRewardAta),
-      getAccountMeta(accounts.rewardTokenMint),
+      getAccountMeta(accounts.vaultRewardsAta),
+      getAccountMeta(accounts.vaultStakingAta),
       getAccountMeta(accounts.stakingTokenMint),
+      getAccountMeta(accounts.rewardTokenMint),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
+      getAccountMeta(accounts.mplCoreProgram),
+      getAccountMeta(accounts.nftMarketplace),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getUnstakeInstructionDataEncoder().encode({}),
+    data: getCloseVaultInstructionDataEncoder().encode({}),
     programAddress,
-  } as UnstakeInstruction<
+  } as CloseVaultInstruction<
     TProgramAddress,
+    TAccountProvider,
     TAccountStaker,
+    TAccountNft,
     TAccountStakingVault,
-    TAccountStakerTokenAta,
-    TAccountStakingVaultAta,
-    TAccountVaultRewardAta,
-    TAccountStakerRewardAta,
-    TAccountRewardTokenMint,
+    TAccountVaultRewardsAta,
+    TAccountVaultStakingAta,
     TAccountStakingTokenMint,
+    TAccountRewardTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
+    TAccountMplCoreProgram,
+    TAccountNftMarketplace,
     TAccountSystemProgram
   >);
 }
 
-export type ParsedUnstakeInstruction<
+export type ParsedCloseVaultInstruction<
   TProgram extends string = typeof STAKING_VAULT_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
-    staker: TAccountMetas[0];
-    stakingVault: TAccountMetas[1];
-    stakerTokenAta: TAccountMetas[2];
-    stakingVaultAta: TAccountMetas[3];
-    vaultRewardAta: TAccountMetas[4];
-    stakerRewardAta: TAccountMetas[5];
-    rewardTokenMint: TAccountMetas[6];
-    stakingTokenMint: TAccountMetas[7];
+    /** CHECK checked address of the provider */
+    provider: TAccountMetas[0];
+    staker: TAccountMetas[1];
+    /** CHECK this will be cheked by the MPL-Program */
+    nft: TAccountMetas[2];
+    stakingVault: TAccountMetas[3];
+    vaultRewardsAta: TAccountMetas[4];
+    vaultStakingAta: TAccountMetas[5];
+    stakingTokenMint: TAccountMetas[6];
+    rewardTokenMint: TAccountMetas[7];
     tokenProgram: TAccountMetas[8];
     associatedTokenProgram: TAccountMetas[9];
-    systemProgram: TAccountMetas[10];
+    /** CHECK this will be cheked at marketplace */
+    mplCoreProgram: TAccountMetas[10];
+    nftMarketplace: TAccountMetas[11];
+    systemProgram: TAccountMetas[12];
   };
-  data: UnstakeInstructionData;
+  data: CloseVaultInstructionData;
 };
 
-export function parseUnstakeInstruction<
+export function parseCloseVaultInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
-): ParsedUnstakeInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 11) {
+): ParsedCloseVaultInstruction<TProgram, TAccountMetas> {
+  if (instruction.accounts.length < 13) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -526,18 +569,20 @@ export function parseUnstakeInstruction<
   return {
     programAddress: instruction.programAddress,
     accounts: {
+      provider: getNextAccount(),
       staker: getNextAccount(),
+      nft: getNextAccount(),
       stakingVault: getNextAccount(),
-      stakerTokenAta: getNextAccount(),
-      stakingVaultAta: getNextAccount(),
-      vaultRewardAta: getNextAccount(),
-      stakerRewardAta: getNextAccount(),
-      rewardTokenMint: getNextAccount(),
+      vaultRewardsAta: getNextAccount(),
+      vaultStakingAta: getNextAccount(),
       stakingTokenMint: getNextAccount(),
+      rewardTokenMint: getNextAccount(),
       tokenProgram: getNextAccount(),
       associatedTokenProgram: getNextAccount(),
+      mplCoreProgram: getNextAccount(),
+      nftMarketplace: getNextAccount(),
       systemProgram: getNextAccount(),
     },
-    data: getUnstakeInstructionDataDecoder().decode(instruction.data),
+    data: getCloseVaultInstructionDataDecoder().decode(instruction.data),
   };
 }

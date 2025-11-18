@@ -11,19 +11,18 @@ import {
   type Address,
   type SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM,
   type SolanaError,
-} from '@solana/kit';
+} from 'gill';
 import { STAKING_VAULT_PROGRAM_ADDRESS } from '../programs';
 
-/** StakingPeriodNotCompleted: The staking period has not yet been completed. */
-export const STAKING_VAULT_ERROR__STAKING_PERIOD_NOT_COMPLETED = 0x1770; // 6000
+/** CPIFail: Minting CPI failed */
+export const STAKING_VAULT_ERROR__C_P_I_FAIL = 0x1770; // 6000
 
-export type StakingVaultError =
-  typeof STAKING_VAULT_ERROR__STAKING_PERIOD_NOT_COMPLETED;
+export type StakingVaultError = typeof STAKING_VAULT_ERROR__C_P_I_FAIL;
 
 let stakingVaultErrorMessages: Record<StakingVaultError, string> | undefined;
 if (process.env.NODE_ENV !== 'production') {
   stakingVaultErrorMessages = {
-    [STAKING_VAULT_ERROR__STAKING_PERIOD_NOT_COMPLETED]: `The staking period has not yet been completed.`,
+    [STAKING_VAULT_ERROR__C_P_I_FAIL]: `Minting CPI failed`,
   };
 }
 

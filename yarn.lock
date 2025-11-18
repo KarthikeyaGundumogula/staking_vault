@@ -303,6 +303,11 @@
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.8.0.tgz#cee43d801fcef9644b11b8194857695acd5f815a"
   integrity sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==
 
+"@solana-program/address-lookup-table@^0.10.0":
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/@solana-program/address-lookup-table/-/address-lookup-table-0.10.0.tgz#a7e9dd0a37e9a960396ec608d756ef5d44e485c6"
+  integrity sha512-lcp+IYwoFBODhg8vXsh5vpxweLxpSKqjAu8P1LyqQxgk2yqwYmJGA79YKa+lZvsQjP/c0rzIZYWIGxFMMes2zA==
+
 "@solana-program/compute-budget@^0.11.0":
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/@solana-program/compute-budget/-/compute-budget-0.11.0.tgz#0c18ac6fd9641fd8fe3d882f5784a626f57c965c"
@@ -312,6 +317,11 @@
   version "0.10.0"
   resolved "https://registry.yarnpkg.com/@solana-program/system/-/system-0.10.0.tgz#f68ffb0a3e1c1d5e68ecfe111fbbe729f95a582a"
   integrity sha512-Go+LOEZmqmNlfr+Gjy5ZWAdY5HbYzk2RBewD9QinEU/bBSzpFfzqDRT55JjFRBGJUvMgf3C2vfXEGT4i8DSI4g==
+
+"@solana-program/token-2022@^0.6.1":
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/@solana-program/token-2022/-/token-2022-0.6.1.tgz#dcc44d56228e34c3b90099d9d3cab97d84c12367"
+  integrity sha512-Ex02cruDMGfBMvZZCrggVR45vdQQSI/unHVpt/7HPt/IwFYB4eTlXtO8otYZyqV/ce5GqZ8S6uwyRf0zy6fdbA==
 
 "@solana-program/token@^0.8.0":
   version "0.8.0"
@@ -341,7 +351,7 @@
     "@solana/errors" "5.0.0"
     "@solana/nominal-types" "5.0.0"
 
-"@solana/assertions@5.0.0":
+"@solana/assertions@5.0.0", "@solana/assertions@^5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@solana/assertions/-/assertions-5.0.0.tgz#c06cd53dc9a68cc757d2f1f7eec690c744966dee"
   integrity sha512-2kIykk90kYciQW6bp+KaE6jRd1Y2CgHPeJxxlc5chQnjhoG6eiD8VXvocs6AvqPTht0p/SoEj9jH5tT4oG/bcg==
@@ -514,7 +524,7 @@
     "@solana/codecs-strings" "2.0.0-rc.1"
     "@solana/options" "2.0.0-rc.1"
 
-"@solana/codecs@5.0.0":
+"@solana/codecs@5.0.0", "@solana/codecs@^5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@solana/codecs/-/codecs-5.0.0.tgz#2c57ec595b0e7eb2507a7ad3b03acae7028840a1"
   integrity sha512-KOw0gFUSBxIMDWLJ3AkVFkEci91dw0Rpx3C6y83Our7fSW+SEP8vRZklCElieYR85LHVB1QIEhoeHR7rc+Ifkw==
@@ -881,7 +891,7 @@
     "@solana/errors" "5.0.0"
     "@solana/rpc-types" "5.0.0"
 
-"@solana/transaction-confirmation@5.0.0":
+"@solana/transaction-confirmation@5.0.0", "@solana/transaction-confirmation@^5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@solana/transaction-confirmation/-/transaction-confirmation-5.0.0.tgz#04445e23563411d767f9acae98fa3d6cd6a00f8a"
   integrity sha512-LpusTopYIuQC8hBCloExkTr4Z5/zdp5f4IIbzD5XFeW3xXPZytS3H1IDMGk4bmLdZi9zQNA4lnNHKra5IncRbw==
@@ -1521,6 +1531,20 @@ get-proto@^1.0.1:
   dependencies:
     dunder-proto "^1.0.1"
     es-object-atoms "^1.0.0"
+
+gill@^0.14.0:
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/gill/-/gill-0.14.0.tgz#98d28bfdeec55beb48a0d616ddf6f519d0fa7a4d"
+  integrity sha512-sDVxezBIRUVDPdpWBvLWYX/sRHk+qhRSS9r7o547Ezk5MolcS2uTD7iopDXdljnMKHbXriNdA4W4QA2DEe3PaQ==
+  dependencies:
+    "@solana-program/address-lookup-table" "^0.10.0"
+    "@solana-program/compute-budget" "^0.11.0"
+    "@solana-program/system" "^0.10.0"
+    "@solana-program/token-2022" "^0.6.1"
+    "@solana/assertions" "^5.0.0"
+    "@solana/codecs" "^5.0.0"
+    "@solana/kit" "^5.0.0"
+    "@solana/transaction-confirmation" "^5.0.0"
 
 glob-parent@~5.1.2:
   version "5.1.2"

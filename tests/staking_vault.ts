@@ -23,7 +23,7 @@ import {
 } from "@metaplex-foundation/mpl-core";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 
-describe.only("staking_vault", () => {
+describe("staking_vault", () => {
   let setupData: SetupResult;
   let provider: anchor.web3.Keypair;
   let staker: anchor.web3.Keypair;
@@ -84,7 +84,7 @@ describe.only("staking_vault", () => {
     };
   });
 
-  it.only("Open Staking Vault", async () => {
+  it("Open Staking Vault", async () => {
     let init_config = {
       duration: duration,
       minAmount: min_amount,
@@ -144,7 +144,7 @@ describe.only("staking_vault", () => {
     );
   });
 
-  it.only("Stake Tokens", async () => {
+  it("Stake Tokens", async () => {
     // console.log("--Opening Vault--");
     // run this sigle test for complete workflow testing
     // try {
@@ -190,7 +190,7 @@ describe.only("staking_vault", () => {
     );
   });
 
-  it.only("Unstake Tokens", async () => {
+  it("Unstake Tokens", async () => {
     console.log("--Unstaking Tokens--");
     const staker_balance_pre_unstake = await connection.getTokenAccountBalance(
       setupData.staker_staking_ata

@@ -58,6 +58,7 @@ pub mod staking_vault {
             StakingVaultError::VaultNotEmpty
         );
         ctx.accounts.close_vault_accounts()?;
+        ctx.accounts.burn_nft()?;
         Ok(())
     }
 }

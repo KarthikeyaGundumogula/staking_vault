@@ -6,6 +6,7 @@
  * @see https://github.com/codama-idl/codama
  */
 
+export * from './closeVault';
 export * from './depositRewards';
 export * from './incrementStake';
 export * from './open';

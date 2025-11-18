@@ -7,17 +7,19 @@ pub struct DepositAsset<'info> {
     /// CHECK: This is just for look-up
     #[account(mut)]
     pub asset: AccountInfo<'info>,
+    /// CHECK: This account is provided by the payer
+    pub receiver:AccountInfo<'info>,
     #[account(
         init,
         payer = payer,
         space = 8+ Vault::INIT_SPACE,
-        seeds = [b"vault",new_owner.key().as_ref()],
+        seeds = [b"vault",receiver.key().as_ref()],
         bump
     )]
     pub vault: Account<'info, Vault>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    /// CHECK: this account will be checked by the mpl_core program
+    /// CHECK: deposit to the vault only
     #[account(address = vault.key())]
     pub new_owner: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
@@ -27,9 +29,9 @@ pub struct DepositAsset<'info> {
 }
 
 impl<'info> DepositAsset<'info> {
-    pub fn deposit(&mut self, receiver: Pubkey, bumps: DepositAssetBumps) -> Result<()> {
+    pub fn deposit(&mut self, bumps: DepositAssetBumps) -> Result<()> {
         self.vault.bump = bumps.vault;
-        self.vault.receiver = receiver;
+        self.vault.receiver = *self.receiver.key;
         
         TransferV1CpiBuilder::new(&self.mpl_core_program.to_account_info())
             .asset(&self.asset.to_account_info())
