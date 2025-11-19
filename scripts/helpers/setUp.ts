@@ -6,14 +6,16 @@ import {
   getAddressEncoder,
   createSolanaClient,
   Rpc,
+  RpcSubscriptions,
   SolanaRpcApi,
   SendAndConfirmTransactionWithSignersFunction,
+  SolanaRpcSubscriptionsApi,
+  airdropFactory,
+  lamports,
 } from "gill";
 import { loadKeypairSignerFromFile } from "gill/node";
-import {
-  findAssociatedTokenPda,
-  TOKEN_PROGRAM_ADDRESS,
-} from "@solana-program/token";
+import { TOKEN_PROGRAM_ADDRESS } from "gill/programs";
+import { getAssociatedTokenAccountAddress } from "gill/programs";
 // import provider from "../../provider-wallet.json";
 // import staker from "../../staker-wallet.json";
 
@@ -22,27 +24,25 @@ export type Token_Accounts = {
   vault_acc: Address;
   provider_ata: Address;
   vault_ata: Address;
-  receiver_ata: Address;
+  staker_ata: Address;
   vault_program_id: Address;
   provider_acc: KeyPairSigner;
   staker_acc: KeyPairSigner;
 };
 
-type CreateSolanaResult = ReturnType<typeof createSolanaClient>;
-
 export type Client = {
   rpc: Rpc<SolanaRpcApi>;
   sendAndConfirmTransaction: SendAndConfirmTransactionWithSignersFunction;
+  rpcSubscriptions: RpcSubscriptions<SolanaRpcSubscriptionsApi>;
   god: KeyPairSigner;
 };
 
-
 export async function getClient(): Promise<Client> {
-  const { rpc, sendAndConfirmTransaction } =
+  const { rpc, sendAndConfirmTransaction, rpcSubscriptions } =
     createSolanaClient({ urlOrMoniker: "localnet" });
   const god = await loadKeypairSignerFromFile();
 
-  return { rpc, sendAndConfirmTransaction, god };
+  return { rpc, sendAndConfirmTransaction, god, rpcSubscriptions };
 }
 
 const STAKING_VAULT_ID = "6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu";
@@ -63,26 +63,26 @@ export async function getAccounts(mint) {
   });
 
   let tokenAcc: Token_Accounts | undefined;
-  let [proivider_ata] = await findAssociatedTokenPda({
-    mint: mint.address,
-    owner: provider_acc.address,
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-  });
-  let [staker_ata] = await findAssociatedTokenPda({
-    mint: mint.address,
-    owner: staker_acc.address,
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-  });
-  let [vault_ata] = await findAssociatedTokenPda({
-    mint: mint.address,
-    owner: vault_state_pda,
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-  });
+  let proivider_ata = await getAssociatedTokenAccountAddress(
+    mint,
+    provider_acc,
+    TOKEN_PROGRAM_ADDRESS
+  );
+  let staker_ata = await getAssociatedTokenAccountAddress(
+    mint,
+    staker_acc,
+    TOKEN_PROGRAM_ADDRESS
+  );
+  let vault_ata = await getAssociatedTokenAccountAddress(
+    mint,
+    vault_state_pda,
+    TOKEN_PROGRAM_ADDRESS
+  );
 
   tokenAcc = {
     mint_address: mint.address,
     provider_ata: proivider_ata,
-    receiver_ata: staker_ata,
+    staker_ata: staker_ata,
     vault_ata: vault_ata,
     vault_acc: vault_state_pda,
     vault_program_id: STAKING_VAULT_ID as Address,
@@ -91,4 +91,15 @@ export async function getAccounts(mint) {
   };
 
   return tokenAcc;
+}
+
+export async function airdrop(client: Client, addr: Address) {
+  await airdropFactory({
+    rpc: client.rpc,
+    rpcSubscriptions: client.rpcSubscriptions,
+  })({
+    lamports: lamports(1000n),
+    commitment: "confirmed",
+    recipientAddress: addr,
+  });
 }
