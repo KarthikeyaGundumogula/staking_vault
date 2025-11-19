@@ -12,7 +12,7 @@ import {
 import { assert } from "chai";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 
-describe.only("nft_escrow", () => {
+describe("nft_escrow", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
   const nft_program = anchor.workspace

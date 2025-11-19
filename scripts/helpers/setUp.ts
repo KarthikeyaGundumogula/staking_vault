@@ -25,9 +25,6 @@ export type Token_Accounts = {
   provider_ata: Address;
   vault_ata: Address;
   staker_ata: Address;
-  vault_program_id: Address;
-  provider_acc: KeyPairSigner;
-  staker_acc: KeyPairSigner;
 };
 
 export type Client = {
@@ -35,21 +32,35 @@ export type Client = {
   sendAndConfirmTransaction: SendAndConfirmTransactionWithSignersFunction;
   rpcSubscriptions: RpcSubscriptions<SolanaRpcSubscriptionsApi>;
   god: KeyPairSigner;
+  staker: KeyPairSigner;
+  provider: KeyPairSigner;
 };
 
 export async function getClient(): Promise<Client> {
   const { rpc, sendAndConfirmTransaction, rpcSubscriptions } =
     createSolanaClient({ urlOrMoniker: "localnet" });
   const god = await loadKeypairSignerFromFile();
-
-  return { rpc, sendAndConfirmTransaction, god, rpcSubscriptions };
+  const staker = await generateKeyPairSigner();
+  const provider = await generateKeyPairSigner();
+  return {
+    rpc,
+    sendAndConfirmTransaction,
+    god,
+    rpcSubscriptions,
+    staker,
+    provider,
+  };
 }
 
-const STAKING_VAULT_ID = "6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu";
+export const STAKING_VAULT_ID = "DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ";
+export const NFT_MARKETPLACE_ID =
+  "3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh";
 
-export async function getAccounts(mint) {
-  const provider_acc = await generateKeyPairSigner();
-  const staker_acc = await generateKeyPairSigner();
+export async function getAccounts(
+  mint: Address,
+  provider_acc: Address,
+  staker_acc: Address
+) {
   const SEED = "staking_vault";
   const addressEncoder = getAddressEncoder();
 
@@ -57,8 +68,7 @@ export async function getAccounts(mint) {
     programAddress: STAKING_VAULT_ID as Address,
     seeds: [
       SEED,
-      addressEncoder.encode(provider_acc.address),
-      addressEncoder.encode(staker_acc.address),
+      addressEncoder.encode(provider_acc),
     ],
   });
 
@@ -80,14 +90,11 @@ export async function getAccounts(mint) {
   );
 
   tokenAcc = {
-    mint_address: mint.address,
+    mint_address: mint,
     provider_ata: proivider_ata,
     staker_ata: staker_ata,
     vault_ata: vault_ata,
     vault_acc: vault_state_pda,
-    vault_program_id: STAKING_VAULT_ID as Address,
-    provider_acc,
-    staker_acc,
   };
 
   return tokenAcc;
@@ -98,7 +105,7 @@ export async function airdrop(client: Client, addr: Address) {
     rpc: client.rpc,
     rpcSubscriptions: client.rpcSubscriptions,
   })({
-    lamports: lamports(1000n),
+    lamports: lamports(10000000000000n),
     commitment: "confirmed",
     recipientAddress: addr,
   });

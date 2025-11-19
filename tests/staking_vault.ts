@@ -23,13 +23,12 @@ import {
 } from "@metaplex-foundation/mpl-core";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 
-describe("staking_vault", () => {
+describe.only("staking_vault", () => {
   let setupData: SetupResult;
   let provider: anchor.web3.Keypair;
   let staker: anchor.web3.Keypair;
   let god: anchor.web3.Keypair;
   let un_authorized_staker: anchor.web3.Keypair;
-  let mintAccounts;
   let stakeAccounts;
   let unStakeAccounts;
 
@@ -53,19 +52,6 @@ describe("staking_vault", () => {
     un_authorized_staker = anchor.web3.Keypair.generate();
 
     setupData = await setUp(provider, staker, god, un_authorized_staker);
-
-    mintAccounts = {
-      provider: provider.publicKey,
-      stakingVault: setupData.vault_state_pda,
-      providerRewardTokensAta: setupData.provider_reward_ata,
-      rewardTokenMint: setupData.reward_mint,
-      vaultRewardTokenAta: setupData.vault_reward_ata,
-      stakingTokenMint: setupData.staking_mint,
-      systemProgram: SYSTEM_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-    };
-
     stakeAccounts = {
       staker: staker.publicKey,
       stakingVault: setupData.vault_state_pda,
@@ -145,18 +131,6 @@ describe("staking_vault", () => {
   });
 
   it("Stake Tokens", async () => {
-    // console.log("--Opening Vault--");
-    // run this sigle test for complete workflow testing
-    // try {
-    //   const tx = await program.methods
-    //     .open(duration, min_amount, max_amount, initial_rewards_deposit,staker.publicKey)
-    //     .accountsStrict(mintAccounts)
-    //     .signers([provider])
-    //     .rpc();
-    // } catch (error) {
-    //   console.error("Error in opening staking vault: ", await error.getLogs());
-    // }
-    // console.log("--Staking Tokens--");
     const staker_balance_pre_stake = await connection.getTokenAccountBalance(
       setupData.staker_staking_ata
     );

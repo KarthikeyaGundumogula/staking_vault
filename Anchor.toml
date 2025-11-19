@@ -6,8 +6,8 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-nft_marketplace = "GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi"
-staking_vault = "6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu"
+nft_marketplace = "3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh"
+staking_vault = "DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ"
 
 [registry]
 url = "https://api.apr.dev"
@@ -16,15 +16,21 @@ url = "https://api.apr.dev"
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
-[test]
-startup_wait = 20000
-
-[test.validator]
-url = "https://api.mainnet-beta.solana.com"
-
-[[test.validator.clone]]
-address = "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"  # MPL Core
-
 [scripts]
 generate-clients = "yarn ts-node ./scripts/generate-clients.ts"
+localnet = "solana-test-validator -r --bpf-program CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d core.so"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""
+
+[test]
+startup_wait = 20000
+shutdown_wait = 2000
+upgradeable = false
+
+[test.validator]
+bind_address = "0.0.0.0"
+url = "https://api.mainnet-beta.solana.com"
+ledger = ".anchor/test-ledger"
+rpc_port = 8899
+
+[[test.validator.clone]]
+address = "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"

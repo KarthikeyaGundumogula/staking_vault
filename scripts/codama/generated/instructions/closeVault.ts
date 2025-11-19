@@ -68,7 +68,7 @@ export type CloseVaultInstruction<
     | AccountMeta<string> = 'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d',
   TAccountNftMarketplace extends
     | string
-    | AccountMeta<string> = 'GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi',
+    | AccountMeta<string> = '3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh',
   TAccountSystemProgram extends
     | string
     | AccountMeta<string> = '11111111111111111111111111111111',
@@ -304,7 +304,7 @@ export async function getCloseVaultInstructionAsync<
   }
   if (!accounts.nftMarketplace.value) {
     accounts.nftMarketplace.value =
-      'GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi' as Address<'GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi'>;
+      '3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh' as Address<'3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh'>;
   }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
@@ -478,7 +478,7 @@ export function getCloseVaultInstruction<
   }
   if (!accounts.nftMarketplace.value) {
     accounts.nftMarketplace.value =
-      'GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi' as Address<'GtngBj7fzxga8jZxRSFZZYagKULxLQaWgne4a4a8NZgi'>;
+      '3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh' as Address<'3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh'>;
   }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =

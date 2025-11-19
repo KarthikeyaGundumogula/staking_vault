@@ -1,5 +1,5 @@
 import { getCreateAccountInstruction } from "@solana-program/system";
-import { Client, getClient, Token_Accounts, getAccounts } from "./setUp";
+import { Client, getClient, getAccounts } from "./setUp";
 import {
   generateKeyPairSigner,
   createTransaction,
@@ -7,6 +7,7 @@ import {
   getExplorerLink,
   getSignatureFromTransaction,
   signTransactionMessageWithSigners,
+  TransactionSigner,
 } from "gill";
 import {
   TOKEN_PROGRAM_ADDRESS,
@@ -14,16 +15,13 @@ import {
   getMintSize,
   getInitializeMintInstruction,
   getCreateMetadataAccountV3Instruction,
-  TOKEN_METADATA_PROGRAM_ADDRESS,
   buildMintTokensTransaction,
   buildTransferTokensTransaction,
 } from "gill/programs";
 
 export async function createFungibleToken(client: Client) {
-  console.log(client.god.address);
 
   const tokenProgram = TOKEN_PROGRAM_ADDRESS;
-  console.log(tokenProgram);
   const mintSize = getMintSize();
   const [mint, rentExemption] = await Promise.all([
     generateKeyPairSigner(),
@@ -112,7 +110,12 @@ export async function mintFT(client: Client, holder: Address, mint: Address) {
   await client.sendAndConfirmTransaction(signedTx);
 }
 
-async function transferFt(client, to, mint, amount) {
+export async function transferFt(
+  client: Client,
+  to: Address | TransactionSigner,
+  mint: Address,
+  amount: number
+) {
   const { value: latestBlockhash } = await client.rpc
     .getLatestBlockhash()
     .send();
@@ -128,22 +131,36 @@ async function transferFt(client, to, mint, amount) {
   await client.sendAndConfirmTransaction(signedTx);
 }
 
-async function main() {
-  const client = await getClient();
+export async function fund_rewardToken(client: Client) {
   const mint = await createFungibleToken(client);
-  const tokenAccs = await getAccounts(mint);
-  await mintFT(client, tokenAccs.staker_acc.address, mint.address);
-  let { value: postMintBalance } = await client.rpc
-    .getTokenAccountBalance(tokenAccs.staker_ata)
-    .send();
-  console.log(postMintBalance);
+  const tokenAccs = await getAccounts(
+    mint.address,
+    client.provider.address,
+    client.staker.address
+  );
+  await mintFT(client, client.provider.address, mint.address);
 
-  await mintFT(client, client.god.address, mint.address);
-  await transferFt(client, tokenAccs.provider_acc, mint.address, 4000);
-  const { value: providerBalance } = await client.rpc
-    .getTokenAccountBalance(tokenAccs.provider_ata)
-    .send();
-  console.log(providerBalance);
+  // await mintFT(client, client.god.address, mint.address);
+  // await transferFt(client, client.staker.address, mint.address, 4000);
+  // const { value: providerBalance } = await client.rpc
+  //   .getTokenAccountBalance(tokenAccs.provider_ata)
+  //   .send();
+  // console.log(providerBalance);
+  return mint;
 }
 
-main();
+export async function fund_stakingToken(client: Client) {
+  const mint = await createFungibleToken(client);
+  const tokenAccs = await getAccounts(
+    mint.address,
+    client.provider.address,
+    client.staker.address
+  );
+  await mintFT(client, client.staker.address, mint.address);
+  return mint;
+}
+async function main() {
+  const client = await getClient();
+  const mitn = await fund_rewardToken(client);
+}
+// main();

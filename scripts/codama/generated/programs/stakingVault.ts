@@ -23,7 +23,7 @@ import {
 } from '../instructions';
 
 export const STAKING_VAULT_PROGRAM_ADDRESS =
-  '6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu' as Address<'6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu'>;
+  'DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ' as Address<'DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ'>;
 
 export enum StakingVaultAccount {
   StakingVault,
@@ -134,7 +134,7 @@ export function identifyStakingVaultInstruction(
 }
 
 export type ParsedStakingVaultInstruction<
-  TProgram extends string = '6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu',
+  TProgram extends string = 'DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ',
 > =
   | ({
       instructionType: StakingVaultInstruction.CloseVault;
