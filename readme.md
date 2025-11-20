@@ -1,135 +1,245 @@
-# DePIN Staking Vault
+## **📍 DePIN Staking Vaults — Powered by Delegated Stake & Tokenized Positions**
 
-A Solana program for managing staking vaults where DePIN (Decentralized Physical Infrastructure Network) providers can create staking opportunities with predefined stakers. This program enables secure token staking with configurable durations and amounts, along with reward distribution mechanisms.
+This project enables a **staking marketplace on top of DePIN networks**, where real-world infrastructure providers (charging stations, mobility nodes, hotspots, etc.) must stake tokens to operate and earn rewards.
 
-## Overview
+This protocol lets **regular users delegate stake**, allowing providers to scale while stakers earn yield. Each position is represented as a transferable **NFT (similar to UniV3 LP NFTs)**.
 
-The DePIN Staking Vault program facilitates a trust-based staking mechanism where:
+---
 
-## ✨ Features
+## **🌍 Why This Exists**
 
-🏛️ **Vault Management**
+DePIN operators need capital to stake before operating. This protocol unlocks liquidity sources by pairing capital providers with infrastructure operators.
 
-- Custom vault creation with configurable parameters
-- Minimum and maximum staking limits
-- Flexible staking duration settings
+| Role          | Benefit                                |
+| ------------- | -------------------------------------- |
+| **Stakers**   | Earn yield without running hardware    |
+| **Providers** | Scale operations using delegated stake |
+| **Traders**   | Enter or exit yield positions via NFTs |
 
-🔒 **Staking Operations**
+---
 
-- Secure token staking mechanism
-- Ability to increase stake during active period
-- Real-time stake amount tracking
+## **🔑 Core Concepts**
 
-💰 **Reward System**
+### **📌 Staking Vaults**
 
-- Initial reward deposit capability
-- Dynamic reward addition during staking period
-- Automatic reward distribution upon unstaking
+* One provider ↔ one staker
+* Provider deposits rewards manually over time
+* NFT represents vault ownership
+* Closed only when balances are zero
+* NFT burned on close
 
-## 🎯 Use Cases
+### **📌 Position NFTs**
 
-### 📡 Telecommunications Infrastructure
+* Minted on vault open
+* Transferred on marketplace
+* Represent rights to withdraw stake & rewards
 
-- **5G Node Operation**: Telecom providers can use vaults to onboard trusted node operators. Operators stake tokens as commitment, receive rewards for uptime and service quality.
-- **Rural Internet Expansion**: Communities can create vaults for local ISP infrastructure deployment, with residents staking to support expansion while earning rewards from service fees.
+### **📌 Marketplace Program**
 
-### 🌿 Environmental Projects
+* Escrow deposit + claim flows
+* Trading positions without interacting with vault
+* No staking logic inside marketplace
 
-- **Carbon Offset Verification**: Environmental agencies can create vaults for carbon credit verifiers, where staking ensures honest reporting and rewards come from verification fees.
-- **Renewable Energy Grid**: Solar/wind farm operators stake to participate in power distribution networks, earning rewards from energy supply.
+---
 
-### 🏗️ Smart City Infrastructure
+## **⚙️ Programs Overview**
 
-- **IoT Sensor Networks**: Cities can onboard sensor network operators through staking vaults, distributing rewards based on data quality and uptime.
-- **EV Charging Network**: Charging station operators stake to join the network, earning rewards from charging fees while ensuring service reliability.
+| Program                     | Purpose                                                  | Program ID                                     |
+| --------------------------- | -------------------------------------------------------- | ---------------------------------------------- |
+| **Staking Vault Program**   | Manages staking, withdrawals, rewards, and NFT lifecycle | `DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ` |
+| **NFT Marketplace Program** | Manages position transfers & escrow                      | `3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh` |
 
-### 🌐 Decentralized Computing
+---
 
-- **Edge Computing Nodes**: Cloud service providers can use vaults to manage edge computing node operators, with staking ensuring compute resource availability.
-- **Data Storage Solutions**: Decentralized storage providers stake to offer storage services, earning rewards from storage fees.
+## **🧑‍🤝‍🧑 User Stories**
 
-### 🚗 Mobility Networks
+### **<span style="color: rgb(255,165,0)">🧑‍💼 Provider Stories</span>**
 
-- **EV Fleet Management**: Fleet operators stake to participate in electric vehicle networks, earning from vehicle utilization.
-- **Charging Infrastructure**: Station operators stake tokens to join charging networks, receiving rewards from charging fees.
+* **Given** a new vault configuration
+  **When** I open a vault with a staker
+  **Then** delegated stake can be used to scale my DePIN operations.
 
-Each use case leverages the core features of:
+* **Given** rewards are earned off-chain
+  **When** I deposit rewards into the vault
+  **Then** the staker receives claimable returns.
 
-- 🔒 Trust-based staking
-- ⚖️ Configurable parameters
-- 💎 Reward distribution
-- ⏱️ Time-locked commitments
-- 🤝 Designated participant system
+---
 
-## Architecture
+### **<span style="color: rgb(0,180,255)">💰 Staker Stories</span>**
 
-![Simple User Flow](diagrams/DePIN%20Staking%20Vault.png)
+* **Given** a provider-bound vault
+  **When** I stake tokens
+  **Then** I earn rewards without operating infrastructure.
 
-**Technical Details**
+* **Given** my vault position is represented as an NFT
+  **When** I transfer or sell the NFT
+  **Then** ownership transfers without unstaking.
 
-![Technical Architecture](diagrams/technical-diaram.png)
+* **Given** the staking duration has ended
+  **When** I withdraw
+  **Then** I receive principal + rewards.
 
-## User Stories
+---
 
-### Provider Stories
+### **<span style="color: rgb(140,255,0)">📈 Trader Stories</span>**
 
-1. **Vault Creation**
+* **Given** NFTs represent vault ownership
+  **When** I buy one in the marketplace
+  **Then** I inherit withdrawal rights.
 
-   - As a DePIN provider, I want to create a customized staking vault, so that I can establish staking requirements for my infrastructure.
-   - As a provider, I want to set minimum and maximum staking amounts, so that I can ensure appropriate participation levels.
-   - As a provider, I want to specify the staking duration, so that I can guarantee long-term commitment from stakers.
+* **Given** NFTs are transferable
+  **When** ownership changes hands
+  **Then** staking and rewards remain unaffected.
 
-2. **Reward Management**
-   - As a provider, I want to deposit initial rewards when creating the vault, so that I can incentivize stakers.
-   - As a provider, I want to add more rewards to the vault at any time, so that I can adjust incentives based on performance.
-   - As a provider, I want to designate specific stakers, so that I can ensure trusted participants in my infrastructure.
+---
 
-### Staker Stories
+### **<span style="color: rgb(255,0,200)">🛠 Protocol / Developer Stories</span>**
 
-1. **Staking Operations**
+* **Given** staking logic lives in the vault program
+  **When** NFTs are traded
+  **Then** the staking state remains secure.
 
-   - As a designated staker, I want to stake tokens within the defined limits, so that I can participate in the DePIN infrastructure.
-   - As a staker, I want to increase my staked amount during the staking period, so that I can enhance my participation level.
-   - As a staker, I want to view my current stake and vault configuration, so that I can make informed decisions.
+* **Given** a vault holds balances
+  **When** all balances reach zero
+  **Then** the vault can be closed and NFT burned.
 
-2. **Rewards and Unstaking**
-   - As a staker, I want to unstake my tokens after the staking period ends, so that I can reclaim my investment.
-   - As a staker, I want to receive accumulated rewards upon unstaking, so that I can benefit from my participation.
-   - As a staker, I want to verify the completion of the staking period, so that I can plan my unstaking action.
+---
 
-### Qucick Start
+## **🪙 Token & Reward Model**
 
-This is still in the development phase. To test the program locally, follow these steps:
+| Detail        | Rule                         |
+| ------------- | ---------------------------- |
+| Reward source | Manual deposits by provider  |
+| Recipient     | 100% to NFT Owner            |
+| Token types   | Determined by DePIN network  |
+| Exit method   | Withdraw + burn NFT on close |
 
-1. **Build and Install**
-   ```bash
-   npm install && anchor build
-   ```
-2. **Start Local Solana Test Validator**
-   ```bash
-   anchor run localnet
-   ```
-3. **Deploy the Program**
-   ```bash
-   anchor deploy
-   ```
-4. **Open Vault**
-   ```bash
-   anchor run open
-   ```
-5. **Stake Tokens**
-   ```bash
-   anchor run stake
-   ```
+> No automated emissions. Vaults are isolated agreements.
 
-## Example Transactions
+---
 
-Devnet ProgramId - `6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu`
+## **🧩 Design Principles**
 
-1. **Create Vault Transaction**: Open Instruction to create vault with params : `3Qi1saUXRo7rDZUbML9LiJRAGwhQfKgnPYLb3kncx4pFn5MVmCBt8jWJiZTyUAtyQ2DxJuvoYtDEY3hVgKbGGbjt`
-   ![Create Vault Transaction success](diagrams/Open.png)
-2. **Stake Tokens Transaction**: Stake Instruction to stake tokens into the vault : `2GpQCmobi5Cw63dkZrenSe777joVHtmqMK4zXevXrDb7sM8bapj8UHqzUkJTUeVuMZqJtTcsoF4Zy6dYwvcvfA73`
-   ![Stake Transaction success](diagrams/stake.png)
-3. **Unstake Tokens Transaction**: Unstake Instruction to unstake tokens from the vault :
-   `3HwWJnChdRHJMLG8b94sSVN6yg7WxqqbwgbobxfqkzB2ueFxKvEg4dpoupzwg9tTE1dghhvWDLBTrqQx6X23iT6W`
-   ![Unstake Transaction success](diagrams/unstake.png)
+* NFT = ownership layer, not collateral
+* Vault burns on close
+* Inspired by Uniswap V3 architecture
+* Marketplace does not affect staking logic
+* Future: store metadata on NFT using MPL attributes
+
+---
+
+
+## **⚡ Installation & Quick Start (Local Only)**
+
+> **The protocol is still under active development.
+> Currently only local validation and testing are supported.**
+> Both Anchor tests and Gill scripts are available depending on your workflow.
+
+---
+
+### **📍 Prerequisites**
+
+Make sure you have:
+
+* **Node.js + Yarn**
+* **Rust + Solana CLI**
+* **Anchor Framework**
+* **Gill CLI (optional)**
+
+To install dependencies and build the programs:
+
+```sh
+yarn && anchor build
+```
+
+---
+
+### **🧪 Running Anchor Tests**
+
+For full program-level tests:
+
+```sh
+anchor test
+```
+
+> This runs against Anchor’s built-in test validator and executes everything end-to-end.
+
+---
+
+### **🧰 Running via Gill Scripts**
+
+Gill scripts simulate real-world interaction flows and are useful for non-Solana devs or testers who don’t want to write Rust/Anchor code.
+
+#### **Step 1️⃣ Start Local Validator (with MPL-Core preloaded)**
+
+A custom script spins up a localnet with required programs already included:
+
+```sh
+anchor run localnet
+```
+
+> Leave this terminal running—it acts as the blockchain node.
+
+---
+
+#### **Step 2️⃣ Deploy Programs (in a new terminal)**
+
+```sh
+anchor deploy
+```
+
+---
+
+#### **Step 3️⃣ Open a Vault**
+
+Runs the script located at:
+
+```
+scripts/open-vault.ts
+```
+
+Execute:
+
+```sh
+anchor run open
+```
+
+After running, **copy values from logs**:
+
+* **asset address (NFT mint)**
+* **staking token address**
+
+These will be required for the next step.
+
+---
+
+#### **Step 4️⃣ Stake to the Vault**
+
+Before running, open the script:
+
+```
+scripts/stake.ts
+```
+
+Update arguments (vault, asset, staking token).
+
+Then run:
+
+```sh
+anchor run stake
+```
+
+---
+
+
+## **🔜 Roadmap**
+
+| Feature                        | Status         |
+| ------------------------------ | -------------- |
+| On-NFT attribute storage       | Research phase |
+| Multi-staker aggregated vaults | Planned        |
+| Slashing with aggr vaults      | Planned        |
+| Automated reward indexing      | Planned        |
+| Cross-chain DePIN integrations | Long-term      |
+
+---
