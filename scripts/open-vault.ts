@@ -21,20 +21,26 @@ import {
   STAKING_VAULT_ID,
   airdrop,
 } from "./helpers/setUp";
-import { fund_rewardToken, fund_stakingToken } from "./helpers/token-ops";
+import {
+  createFungibleToken,
+  fund_rewardToken,
+  fund_stakingToken,
+} from "./helpers/token-ops";
 
 async function open() {
   const asset = await generateKeyPairSigner();
   const client: Client = await getClient();
   airdrop(client, client.staker.address);
   airdrop(client, client.provider.address);
-  const staking_token_mint = await fund_stakingToken(client);
+  const staking_token_mint = await createFungibleToken(client);
+  await fund_stakingToken(client, staking_token_mint.address);
   const staking_token_atas = await getAccounts(
     staking_token_mint.address,
     client.provider.address,
     client.staker.address
   );
-  const reward_token_mint = await fund_rewardToken(client);
+  const reward_token_mint = await createFungibleToken(client);
+  await fund_rewardToken(client, reward_token_mint.address);
   const reward_token_atas = await getAccounts(
     reward_token_mint.address,
     client.provider.address,
@@ -71,7 +77,7 @@ async function open() {
       tokenProgram: TOKEN_PROGRAM_ADDRESS,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
       duration: BigInt(1),
-      minAmount: BigInt(10000),
+      minAmount: BigInt(0),
       maxAmount: BigInt(10000000000),
       initialDeposit: BigInt(0),
       stakingVault: reward_token_atas.vault_acc,
@@ -105,4 +111,4 @@ async function open() {
   );
 }
 
-open()
+open();

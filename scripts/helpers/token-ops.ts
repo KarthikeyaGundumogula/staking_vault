@@ -102,7 +102,7 @@ export async function mintFT(client: Client, holder: Address, mint: Address) {
     latestBlockhash,
     mint,
     mintAuthority: client.god,
-    amount: 100000,
+    amount: BigInt(10000000),
     destination: holder,
     tokenProgram: TOKEN_PROGRAM_ADDRESS,
   });
@@ -131,14 +131,13 @@ export async function transferFt(
   await client.sendAndConfirmTransaction(signedTx);
 }
 
-export async function fund_rewardToken(client: Client) {
-  const mint = await createFungibleToken(client);
+export async function fund_rewardToken(client: Client,mint:Address) {
   const tokenAccs = await getAccounts(
-    mint.address,
+    mint,
     client.provider.address,
     client.staker.address
   );
-  await mintFT(client, client.provider.address, mint.address);
+  await mintFT(client, client.provider.address, mint);
 
   // await mintFT(client, client.god.address, mint.address);
   // await transferFt(client, client.staker.address, mint.address, 4000);
@@ -149,18 +148,18 @@ export async function fund_rewardToken(client: Client) {
   return mint;
 }
 
-export async function fund_stakingToken(client: Client) {
-  const mint = await createFungibleToken(client);
+export async function fund_stakingToken(client: Client,mint:Address) {
   const tokenAccs = await getAccounts(
-    mint.address,
+    mint,
     client.provider.address,
     client.staker.address
   );
-  await mintFT(client, client.staker.address, mint.address);
+  await mintFT(client, client.staker.address, mint);
   return mint;
 }
 async function main() {
   const client = await getClient();
-  const mitn = await fund_rewardToken(client);
+  const mint = await createFungibleToken(client);
+  const mitn = await fund_stakingToken(client,mint.address);
 }
-// main();
+main();

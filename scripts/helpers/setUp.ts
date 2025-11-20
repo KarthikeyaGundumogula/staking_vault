@@ -16,8 +16,6 @@ import {
 import { loadKeypairSignerFromFile } from "gill/node";
 import { TOKEN_PROGRAM_ADDRESS } from "gill/programs";
 import { getAssociatedTokenAccountAddress } from "gill/programs";
-// import provider from "../../provider-wallet.json";
-// import staker from "../../staker-wallet.json";
 
 export type Token_Accounts = {
   mint_address: Address;
@@ -40,8 +38,8 @@ export async function getClient(): Promise<Client> {
   const { rpc, sendAndConfirmTransaction, rpcSubscriptions } =
     createSolanaClient({ urlOrMoniker: "localnet" });
   const god = await loadKeypairSignerFromFile();
-  const staker = await generateKeyPairSigner();
-  const provider = await generateKeyPairSigner();
+  const staker = await loadKeypairSignerFromFile("provider-wallet.json");
+  const provider = await loadKeypairSignerFromFile("staker-wallet.json");
   return {
     rpc,
     sendAndConfirmTransaction,

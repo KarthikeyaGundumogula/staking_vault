@@ -27,7 +27,7 @@ describe("nft_escrow", () => {
   const receiver = Keypair.generate();
   const umi = createUmi("http://0.0.0.0:8899", "confirmed");
   let [vault] = PublicKey.findProgramAddressSync(
-    [Buffer.from("vault"),receiver.publicKey.toBuffer()],
+    [Buffer.from("vault"), receiver.publicKey.toBuffer()],
     nft_program.programId
   );
 
@@ -68,7 +68,7 @@ describe("nft_escrow", () => {
         .depositAsset()
         .accountsStrict({
           asset: asset.publicKey,
-          receiver:receiver.publicKey,
+          receiver: receiver.publicKey,
           payer: wallet.publicKey,
           newOwner: vault,
           systemProgram: SystemProgram.programId,
@@ -79,20 +79,14 @@ describe("nft_escrow", () => {
         .rpc();
       console.log(transferAssetInstruction);
     } catch (error) {
-      console.error(error)
+      console.error(error);
       console.error(error.getLogs());
     }
 
-
     const vault_data = await nft_program.account.vault.fetch(vault);
-    console.log(vault_data)
-    // assert.ok(vault_data.receiver.equals(receiver.publicKey));
 
-    console.log("vault address", vault.toBase58);
     let asset_data = await fetchAsset(umi, asset.publicKey.toString());
-    console.log(asset_data);
     assert.equal(vault.toBase58(), asset_data.owner as unknown as string);
-
   });
 
   // it("Claims NFT", async () => {

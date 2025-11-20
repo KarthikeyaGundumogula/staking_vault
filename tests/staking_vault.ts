@@ -23,7 +23,7 @@ import {
 } from "@metaplex-foundation/mpl-core";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 
-describe.only("staking_vault", () => {
+describe("staking_vault", () => {
   let setupData: SetupResult;
   let provider: anchor.web3.Keypair;
   let staker: anchor.web3.Keypair;
