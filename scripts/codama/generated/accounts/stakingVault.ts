@@ -52,7 +52,6 @@ export function getStakingVaultDiscriminatorBytes() {
 export type StakingVault = {
   discriminator: ReadonlyUint8Array;
   provider: Address;
-  staker: Address;
   duration: bigint;
   startTime: bigint;
   rewardMint: Address;
@@ -67,7 +66,6 @@ export type StakingVault = {
 
 export type StakingVaultArgs = {
   provider: Address;
-  staker: Address;
   duration: number | bigint;
   startTime: number | bigint;
   rewardMint: Address;
@@ -85,7 +83,6 @@ export function getStakingVaultEncoder(): FixedSizeEncoder<StakingVaultArgs> {
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['provider', getAddressEncoder()],
-      ['staker', getAddressEncoder()],
       ['duration', getU64Encoder()],
       ['startTime', getU64Encoder()],
       ['rewardMint', getAddressEncoder()],
@@ -105,7 +102,6 @@ export function getStakingVaultDecoder(): FixedSizeDecoder<StakingVault> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['provider', getAddressDecoder()],
-    ['staker', getAddressDecoder()],
     ['duration', getU64Decoder()],
     ['startTime', getU64Decoder()],
     ['rewardMint', getAddressDecoder()],
@@ -180,5 +176,5 @@ export async function fetchAllMaybeStakingVault(
 }
 
 export function getStakingVaultSize(): number {
-  return 217;
+  return 185;
 }

@@ -6,5 +6,5 @@
  * @see https://github.com/codama-idl/codama
  */
 
-export * from './baseAssetV1';
-export * from './stakingVault';
+export * from './key';
+export * from './updateAuthority';

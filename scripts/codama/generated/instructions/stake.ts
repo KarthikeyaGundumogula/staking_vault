@@ -55,6 +55,7 @@ export type StakeInstruction<
   TAccountStakingVault extends string | AccountMeta<string> = string,
   TAccountStakerTokenAta extends string | AccountMeta<string> = string,
   TAccountStakingVaultAta extends string | AccountMeta<string> = string,
+  TAccountAsset extends string | AccountMeta<string> = string,
   TAccountStakingTokenMint extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends
     | string
@@ -83,6 +84,9 @@ export type StakeInstruction<
       TAccountStakingVaultAta extends string
         ? WritableAccount<TAccountStakingVaultAta>
         : TAccountStakingVaultAta,
+      TAccountAsset extends string
+        ? ReadonlyAccount<TAccountAsset>
+        : TAccountAsset,
       TAccountStakingTokenMint extends string
         ? ReadonlyAccount<TAccountStakingTokenMint>
         : TAccountStakingTokenMint,
@@ -138,6 +142,7 @@ export type StakeAsyncInput<
   TAccountStakingVault extends string = string,
   TAccountStakerTokenAta extends string = string,
   TAccountStakingVaultAta extends string = string,
+  TAccountAsset extends string = string,
   TAccountStakingTokenMint extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
@@ -147,6 +152,7 @@ export type StakeAsyncInput<
   stakingVault: Address<TAccountStakingVault>;
   stakerTokenAta?: Address<TAccountStakerTokenAta>;
   stakingVaultAta?: Address<TAccountStakingVaultAta>;
+  asset: Address<TAccountAsset>;
   stakingTokenMint: Address<TAccountStakingTokenMint>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
@@ -159,6 +165,7 @@ export async function getStakeInstructionAsync<
   TAccountStakingVault extends string,
   TAccountStakerTokenAta extends string,
   TAccountStakingVaultAta extends string,
+  TAccountAsset extends string,
   TAccountStakingTokenMint extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
@@ -170,6 +177,7 @@ export async function getStakeInstructionAsync<
     TAccountStakingVault,
     TAccountStakerTokenAta,
     TAccountStakingVaultAta,
+    TAccountAsset,
     TAccountStakingTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -183,6 +191,7 @@ export async function getStakeInstructionAsync<
     TAccountStakingVault,
     TAccountStakerTokenAta,
     TAccountStakingVaultAta,
+    TAccountAsset,
     TAccountStakingTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -199,6 +208,7 @@ export async function getStakeInstructionAsync<
     stakingVault: { value: input.stakingVault ?? null, isWritable: false },
     stakerTokenAta: { value: input.stakerTokenAta ?? null, isWritable: true },
     stakingVaultAta: { value: input.stakingVaultAta ?? null, isWritable: true },
+    asset: { value: input.asset ?? null, isWritable: false },
     stakingTokenMint: {
       value: input.stakingTokenMint ?? null,
       isWritable: false,
@@ -265,6 +275,7 @@ export async function getStakeInstructionAsync<
       getAccountMeta(accounts.stakingVault),
       getAccountMeta(accounts.stakerTokenAta),
       getAccountMeta(accounts.stakingVaultAta),
+      getAccountMeta(accounts.asset),
       getAccountMeta(accounts.stakingTokenMint),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
@@ -280,6 +291,7 @@ export async function getStakeInstructionAsync<
     TAccountStakingVault,
     TAccountStakerTokenAta,
     TAccountStakingVaultAta,
+    TAccountAsset,
     TAccountStakingTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -292,6 +304,7 @@ export type StakeInput<
   TAccountStakingVault extends string = string,
   TAccountStakerTokenAta extends string = string,
   TAccountStakingVaultAta extends string = string,
+  TAccountAsset extends string = string,
   TAccountStakingTokenMint extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
@@ -301,6 +314,7 @@ export type StakeInput<
   stakingVault: Address<TAccountStakingVault>;
   stakerTokenAta: Address<TAccountStakerTokenAta>;
   stakingVaultAta: Address<TAccountStakingVaultAta>;
+  asset: Address<TAccountAsset>;
   stakingTokenMint: Address<TAccountStakingTokenMint>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
@@ -313,6 +327,7 @@ export function getStakeInstruction<
   TAccountStakingVault extends string,
   TAccountStakerTokenAta extends string,
   TAccountStakingVaultAta extends string,
+  TAccountAsset extends string,
   TAccountStakingTokenMint extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
@@ -324,6 +339,7 @@ export function getStakeInstruction<
     TAccountStakingVault,
     TAccountStakerTokenAta,
     TAccountStakingVaultAta,
+    TAccountAsset,
     TAccountStakingTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -336,6 +352,7 @@ export function getStakeInstruction<
   TAccountStakingVault,
   TAccountStakerTokenAta,
   TAccountStakingVaultAta,
+  TAccountAsset,
   TAccountStakingTokenMint,
   TAccountTokenProgram,
   TAccountAssociatedTokenProgram,
@@ -351,6 +368,7 @@ export function getStakeInstruction<
     stakingVault: { value: input.stakingVault ?? null, isWritable: false },
     stakerTokenAta: { value: input.stakerTokenAta ?? null, isWritable: true },
     stakingVaultAta: { value: input.stakingVaultAta ?? null, isWritable: true },
+    asset: { value: input.asset ?? null, isWritable: false },
     stakingTokenMint: {
       value: input.stakingTokenMint ?? null,
       isWritable: false,
@@ -391,6 +409,7 @@ export function getStakeInstruction<
       getAccountMeta(accounts.stakingVault),
       getAccountMeta(accounts.stakerTokenAta),
       getAccountMeta(accounts.stakingVaultAta),
+      getAccountMeta(accounts.asset),
       getAccountMeta(accounts.stakingTokenMint),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
@@ -406,6 +425,7 @@ export function getStakeInstruction<
     TAccountStakingVault,
     TAccountStakerTokenAta,
     TAccountStakingVaultAta,
+    TAccountAsset,
     TAccountStakingTokenMint,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -423,10 +443,11 @@ export type ParsedStakeInstruction<
     stakingVault: TAccountMetas[1];
     stakerTokenAta: TAccountMetas[2];
     stakingVaultAta: TAccountMetas[3];
-    stakingTokenMint: TAccountMetas[4];
-    tokenProgram: TAccountMetas[5];
-    associatedTokenProgram: TAccountMetas[6];
-    systemProgram: TAccountMetas[7];
+    asset: TAccountMetas[4];
+    stakingTokenMint: TAccountMetas[5];
+    tokenProgram: TAccountMetas[6];
+    associatedTokenProgram: TAccountMetas[7];
+    systemProgram: TAccountMetas[8];
   };
   data: StakeInstructionData;
 };
@@ -439,7 +460,7 @@ export function parseStakeInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedStakeInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 8) {
+  if (instruction.accounts.length < 9) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -456,6 +477,7 @@ export function parseStakeInstruction<
       stakingVault: getNextAccount(),
       stakerTokenAta: getNextAccount(),
       stakingVaultAta: getNextAccount(),
+      asset: getNextAccount(),
       stakingTokenMint: getNextAccount(),
       tokenProgram: getNextAccount(),
       associatedTokenProgram: getNextAccount(),

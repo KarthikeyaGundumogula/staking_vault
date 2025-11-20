@@ -4,13 +4,11 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked},
 };
+use mpl_core::accounts::BaseAssetV1;
 
 #[derive(Accounts)]
 pub struct Stake<'info> {
-    #[account(
-        mut,
-        address = staking_vault.staker
-        )]
+    #[account(mut)]
     pub staker: Signer<'info>,
     #[account(
       seeds = [b"staking_vault",staking_vault.provider.key().as_ref()],
@@ -32,6 +30,10 @@ pub struct Stake<'info> {
       associated_token::token_program = token_program
     )]
     pub staking_vault_ata: InterfaceAccount<'info, TokenAccount>,
+    #[account(
+        address = staking_vault.nft_mint
+    )]
+    pub asset: Account<'info, BaseAssetV1>,
     pub staking_token_mint: InterfaceAccount<'info, Mint>,
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -48,6 +50,10 @@ impl<'info> Stake<'info> {
             amount <= self.staking_vault.maximum_amount,
             StakingVaultError::AmountTooHigh
         );
+        require!(
+            self.asset.owner == self.staker.key(),
+            StakingVaultError::OnlyNFTOwner
+        );
         let transfer_staking_token_accounts = TransferChecked {
             from: self.staker_token_ata.to_account_info(),
             to: self.staking_vault_ata.to_account_info(),
@@ -63,6 +69,8 @@ impl<'info> Stake<'info> {
 }
 #[error_code]
 pub enum StakingVaultError {
+    #[msg("Only holder of the NFT can only stake")]
+    OnlyNFTOwner,
     #[msg("Staked amount is below the minimum allowed.")]
     AmountTooLow,
     #[msg("Staked amount exceeds the maximum allowed.")]

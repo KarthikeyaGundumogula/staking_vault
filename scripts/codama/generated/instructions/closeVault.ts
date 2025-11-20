@@ -27,10 +27,10 @@ import {
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
-  type ReadonlySignerAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
   type WritableAccount,
+  type WritableSignerAccount,
 } from 'gill';
 import { STAKING_VAULT_PROGRAM_ADDRESS } from '../programs';
 import {
@@ -81,7 +81,7 @@ export type CloseVaultInstruction<
         ? ReadonlyAccount<TAccountProvider>
         : TAccountProvider,
       TAccountStaker extends string
-        ? ReadonlySignerAccount<TAccountStaker> &
+        ? WritableSignerAccount<TAccountStaker> &
             AccountSignerMeta<TAccountStaker>
         : TAccountStaker,
       TAccountNft extends string ? ReadonlyAccount<TAccountNft> : TAccountNft,
@@ -236,7 +236,7 @@ export async function getCloseVaultInstructionAsync<
   // Original accounts.
   const originalAccounts = {
     provider: { value: input.provider ?? null, isWritable: false },
-    staker: { value: input.staker ?? null, isWritable: false },
+    staker: { value: input.staker ?? null, isWritable: true },
     nft: { value: input.nft ?? null, isWritable: false },
     stakingVault: { value: input.stakingVault ?? null, isWritable: true },
     vaultRewardsAta: { value: input.vaultRewardsAta ?? null, isWritable: true },
@@ -436,7 +436,7 @@ export function getCloseVaultInstruction<
   // Original accounts.
   const originalAccounts = {
     provider: { value: input.provider ?? null, isWritable: false },
-    staker: { value: input.staker ?? null, isWritable: false },
+    staker: { value: input.staker ?? null, isWritable: true },
     nft: { value: input.nft ?? null, isWritable: false },
     stakingVault: { value: input.stakingVault ?? null, isWritable: true },
     vaultRewardsAta: { value: input.vaultRewardsAta ?? null, isWritable: true },

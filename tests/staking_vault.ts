@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { assert } from "chai";
+import { assert, expect } from "chai";
 import {
   setUp,
   getAirdrop,
@@ -23,7 +23,7 @@ import {
 } from "@metaplex-foundation/mpl-core";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 
-describe("staking_vault", () => {
+describe.only("staking_vault", () => {
   let setupData: SetupResult;
   let provider: anchor.web3.Keypair;
   let staker: anchor.web3.Keypair;
@@ -118,7 +118,6 @@ describe("staking_vault", () => {
     assert.ok(vaultAccount.rewardMint.equals(setupData.reward_mint));
     assert.ok(vaultAccount.maximumAmount.eq(max_amount));
     assert.ok(vaultAccount.minimumAmount.eq(min_amount));
-    console.log(vaultAccount.staker.toBase58());
 
     // deposit assertions
     const vaultRewards = await connection.getTokenAccountBalance(
@@ -137,7 +136,17 @@ describe("staking_vault", () => {
     try {
       const tx = await program.methods
         .stake(stake_amount)
-        .accountsStrict(stakeAccounts)
+        .accountsStrict({
+          staker: staker.publicKey,
+          stakingVault: setupData.vault_state_pda,
+          stakingTokenMint: setupData.staking_mint,
+          stakerTokenAta: setupData.staker_staking_ata,
+          stakingVaultAta: setupData.vault_staking_ata,
+          systemProgram: SYSTEM_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          asset:asset.publicKey
+        })
         .signers([staker])
         .rpc();
       console.log("Stake transaction: ", tx);
@@ -174,7 +183,20 @@ describe("staking_vault", () => {
     try {
       const tx = await program.methods
         .unstake()
-        .accountsStrict(unStakeAccounts)
+        .accountsStrict({
+          staker: staker.publicKey,
+          stakingVault: setupData.vault_state_pda,
+          stakerTokenAta: setupData.staker_staking_ata,
+          asset:asset.publicKey,
+          stakingVaultAta: setupData.vault_staking_ata,
+          vaultRewardAta: setupData.vault_reward_ata,
+          stakerRewardAta: setupData.staker_reward_ata,
+          rewardTokenMint: setupData.reward_mint,
+          stakingTokenMint: setupData.staking_mint,
+          systemProgram: SYSTEM_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        })
         .signers([staker])
         .rpc();
       console.log("Unstake transaction: ", tx);
@@ -205,19 +227,22 @@ describe("staking_vault", () => {
       const tx = await program.methods
         .stake(stake_amount)
         .accountsStrict({
-          ...stakeAccounts,
-          staker: un_authorized_staker.publicKey,
-          stakerTokenAta: setupData.un_authorized_staker_staking_ata,
+          staker: staker.publicKey,
+          stakingVault: setupData.vault_state_pda,
+          stakingTokenMint: setupData.staking_mint,
+          stakerTokenAta: setupData.staker_staking_ata,
+          stakingVaultAta: setupData.vault_staking_ata,
+          systemProgram: SYSTEM_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          asset: asset.publicKey,
         })
         .signers([un_authorized_staker])
         .rpc();
       console.error("Stake transaction should have failed but succeeded: ", tx);
+      expect.fail();
     } catch (error) {
-      console.error(
-        "Error in staking tokens from unauthorized staker: ",
-        error
-      );
-
+      expect(error).to.exist;
       //--- error you will see is `Error Code: ConstraintHasOne.` ---//
     }
   });

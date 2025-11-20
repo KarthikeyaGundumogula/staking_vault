@@ -12,7 +12,7 @@ pub struct Close<'info> {
     /// CHECK checked address of the provider
     #[account( address = staking_vault.provider)]
     pub provider: UncheckedAccount<'info>,
-    #[account( address = staking_vault.staker)]
+    #[account(mut)]
     pub staker: Signer<'info>,
     /// CHECK this will be cheked by the MPL-Program
     pub nft: UncheckedAccount<'info>,

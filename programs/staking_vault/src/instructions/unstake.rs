@@ -4,6 +4,7 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked},
 };
+use mpl_core::accounts::BaseAssetV1;
 
 #[derive(Accounts)]
 pub struct UnStake<'info> {
@@ -21,6 +22,8 @@ pub struct UnStake<'info> {
       associated_token::token_program = token_program
     )]
     pub staker_token_ata: InterfaceAccount<'info, TokenAccount>,
+    #[account(address = staking_vault.nft_mint)]
+    pub asset: Account<'info,BaseAssetV1>,
     #[account(
       mut,
       associated_token::mint = staking_token_mint,
@@ -51,6 +54,7 @@ pub struct UnStake<'info> {
 
 impl<'info> UnStake<'info> {
     pub fn transfer_staked_tokens(&self, amount: u64) -> Result<()> {
+      require!(self.asset.owner == self.staker.key(),UnstakeError::OnlyNFTOwner);
         let cpi_accounts = TransferChecked {
             from: self.staking_vault_ata.to_account_info(),
             to: self.staker_token_ata.to_account_info(),
@@ -72,7 +76,7 @@ impl<'info> UnStake<'info> {
     pub fn transfer_rewards(&self, amount: u64) -> Result<()> {
         let cpi_accounts = TransferChecked {
             from: self.vault_reward_ata.to_account_info(),
-            to: self.staker_reward_ata.to_account_info(),
+            to: self.staker_reward_ata.to_account_info(), // change this NFT holder ATA
             authority: self.staking_vault.to_account_info(),
             mint: self.reward_token_mint.to_account_info(),
         };
@@ -87,4 +91,10 @@ impl<'info> UnStake<'info> {
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
         transfer_checked(cpi_ctx, amount, self.reward_token_mint.decimals)
     }
+}
+
+#[error_code]
+pub enum UnstakeError{
+  #[msg("Only owner of the NFT can Unstake")]
+  OnlyNFTOwner
 }

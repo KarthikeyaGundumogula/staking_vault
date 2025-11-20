@@ -9,7 +9,7 @@
     "@codama/nodes-from-anchor": "^1.2.10",
     "@codama/renderers": "^1.0.34",
     "@codama/renderers-js": "^1.4.3",
-    "@coral-xyz/anchor": "^0.32.1",
+    "@coral-xyz/anchor": "0.31.1",
     "@metaplex-foundation/mpl-core": "^1.7.0",
     "@metaplex-foundation/mpl-inscription": "^0.8.1",
     "@metaplex-foundation/umi": "^1.4.1",

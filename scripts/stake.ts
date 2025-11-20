@@ -27,7 +27,8 @@ async function stake() {
   airdrop(client, client.staker.address);
   airdrop(client, client.provider.address);
   const STAKING_TOKEN_MINT =
-    "DAENHh8U2rdsPAkL3NTBqtAWKKh1qAVqNicGUrpejj2x" as Address;
+    "737MzWSJUXE4fvX7t7RxTccAtDyoN6PxNdpvb7XX6qzR" as Address; // copy paste the mint address used during open vault -- get from logs of running anchor run open
+  const asset = "Y1Y9AqUJnS1CCKy6bpT5qQZtiByfqrMjqqJpgonhVmb" as Address;
   await fund_stakingToken(client, STAKING_TOKEN_MINT);
   const staking_token_atas = await getAccounts(
     STAKING_TOKEN_MINT,
@@ -62,6 +63,7 @@ async function stake() {
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
       systemProgram: SYSTEM_PROGRAM_ADDRESS,
       amount: BigInt(1000),
+      asset: asset,
     },
     { programAddress: STAKING_VAULT_ID as Address }
   );

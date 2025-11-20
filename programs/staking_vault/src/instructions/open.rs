@@ -56,14 +56,13 @@ impl<'info> Open<'info> {
     pub fn init_config(&mut self, config: InitConfig, bumps: OpenBumps) -> Result<()> {
         self.staking_vault.set_inner(StakingVault {
             provider: self.provider.key(),
-            staker: config.staker,
             duration: config.duration,
             start_time: 0,
             rewards_value: config.initial_deposit,
             staked_value: 0,
             staking_mint: self.staking_token_mint.key(),
             reward_mint: self.reward_token_mint.key(),
-            nft_mint: self.staking_token_mint.key(),
+            nft_mint: self.asset.key(),
             bump: bumps.staking_vault,
             minimum_amount: config.min_amount,
             maximum_amount: config.max_amount,

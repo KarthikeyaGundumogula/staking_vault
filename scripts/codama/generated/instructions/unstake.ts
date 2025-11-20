@@ -52,6 +52,7 @@ export type UnstakeInstruction<
   TAccountStaker extends string | AccountMeta<string> = string,
   TAccountStakingVault extends string | AccountMeta<string> = string,
   TAccountStakerTokenAta extends string | AccountMeta<string> = string,
+  TAccountAsset extends string | AccountMeta<string> = string,
   TAccountStakingVaultAta extends string | AccountMeta<string> = string,
   TAccountVaultRewardAta extends string | AccountMeta<string> = string,
   TAccountStakerRewardAta extends string | AccountMeta<string> = string,
@@ -81,6 +82,9 @@ export type UnstakeInstruction<
       TAccountStakerTokenAta extends string
         ? WritableAccount<TAccountStakerTokenAta>
         : TAccountStakerTokenAta,
+      TAccountAsset extends string
+        ? ReadonlyAccount<TAccountAsset>
+        : TAccountAsset,
       TAccountStakingVaultAta extends string
         ? WritableAccount<TAccountStakingVaultAta>
         : TAccountStakingVaultAta,
@@ -140,6 +144,7 @@ export type UnstakeAsyncInput<
   TAccountStaker extends string = string,
   TAccountStakingVault extends string = string,
   TAccountStakerTokenAta extends string = string,
+  TAccountAsset extends string = string,
   TAccountStakingVaultAta extends string = string,
   TAccountVaultRewardAta extends string = string,
   TAccountStakerRewardAta extends string = string,
@@ -152,6 +157,7 @@ export type UnstakeAsyncInput<
   staker: TransactionSigner<TAccountStaker>;
   stakingVault: Address<TAccountStakingVault>;
   stakerTokenAta?: Address<TAccountStakerTokenAta>;
+  asset: Address<TAccountAsset>;
   stakingVaultAta?: Address<TAccountStakingVaultAta>;
   vaultRewardAta?: Address<TAccountVaultRewardAta>;
   stakerRewardAta?: Address<TAccountStakerRewardAta>;
@@ -166,6 +172,7 @@ export async function getUnstakeInstructionAsync<
   TAccountStaker extends string,
   TAccountStakingVault extends string,
   TAccountStakerTokenAta extends string,
+  TAccountAsset extends string,
   TAccountStakingVaultAta extends string,
   TAccountVaultRewardAta extends string,
   TAccountStakerRewardAta extends string,
@@ -180,6 +187,7 @@ export async function getUnstakeInstructionAsync<
     TAccountStaker,
     TAccountStakingVault,
     TAccountStakerTokenAta,
+    TAccountAsset,
     TAccountStakingVaultAta,
     TAccountVaultRewardAta,
     TAccountStakerRewardAta,
@@ -196,6 +204,7 @@ export async function getUnstakeInstructionAsync<
     TAccountStaker,
     TAccountStakingVault,
     TAccountStakerTokenAta,
+    TAccountAsset,
     TAccountStakingVaultAta,
     TAccountVaultRewardAta,
     TAccountStakerRewardAta,
@@ -215,6 +224,7 @@ export async function getUnstakeInstructionAsync<
     staker: { value: input.staker ?? null, isWritable: true },
     stakingVault: { value: input.stakingVault ?? null, isWritable: false },
     stakerTokenAta: { value: input.stakerTokenAta ?? null, isWritable: true },
+    asset: { value: input.asset ?? null, isWritable: false },
     stakingVaultAta: { value: input.stakingVaultAta ?? null, isWritable: true },
     vaultRewardAta: { value: input.vaultRewardAta ?? null, isWritable: true },
     stakerRewardAta: { value: input.stakerRewardAta ?? null, isWritable: true },
@@ -310,6 +320,7 @@ export async function getUnstakeInstructionAsync<
       getAccountMeta(accounts.staker),
       getAccountMeta(accounts.stakingVault),
       getAccountMeta(accounts.stakerTokenAta),
+      getAccountMeta(accounts.asset),
       getAccountMeta(accounts.stakingVaultAta),
       getAccountMeta(accounts.vaultRewardAta),
       getAccountMeta(accounts.stakerRewardAta),
@@ -326,6 +337,7 @@ export async function getUnstakeInstructionAsync<
     TAccountStaker,
     TAccountStakingVault,
     TAccountStakerTokenAta,
+    TAccountAsset,
     TAccountStakingVaultAta,
     TAccountVaultRewardAta,
     TAccountStakerRewardAta,
@@ -341,6 +353,7 @@ export type UnstakeInput<
   TAccountStaker extends string = string,
   TAccountStakingVault extends string = string,
   TAccountStakerTokenAta extends string = string,
+  TAccountAsset extends string = string,
   TAccountStakingVaultAta extends string = string,
   TAccountVaultRewardAta extends string = string,
   TAccountStakerRewardAta extends string = string,
@@ -353,6 +366,7 @@ export type UnstakeInput<
   staker: TransactionSigner<TAccountStaker>;
   stakingVault: Address<TAccountStakingVault>;
   stakerTokenAta: Address<TAccountStakerTokenAta>;
+  asset: Address<TAccountAsset>;
   stakingVaultAta: Address<TAccountStakingVaultAta>;
   vaultRewardAta: Address<TAccountVaultRewardAta>;
   stakerRewardAta: Address<TAccountStakerRewardAta>;
@@ -367,6 +381,7 @@ export function getUnstakeInstruction<
   TAccountStaker extends string,
   TAccountStakingVault extends string,
   TAccountStakerTokenAta extends string,
+  TAccountAsset extends string,
   TAccountStakingVaultAta extends string,
   TAccountVaultRewardAta extends string,
   TAccountStakerRewardAta extends string,
@@ -381,6 +396,7 @@ export function getUnstakeInstruction<
     TAccountStaker,
     TAccountStakingVault,
     TAccountStakerTokenAta,
+    TAccountAsset,
     TAccountStakingVaultAta,
     TAccountVaultRewardAta,
     TAccountStakerRewardAta,
@@ -396,6 +412,7 @@ export function getUnstakeInstruction<
   TAccountStaker,
   TAccountStakingVault,
   TAccountStakerTokenAta,
+  TAccountAsset,
   TAccountStakingVaultAta,
   TAccountVaultRewardAta,
   TAccountStakerRewardAta,
@@ -414,6 +431,7 @@ export function getUnstakeInstruction<
     staker: { value: input.staker ?? null, isWritable: true },
     stakingVault: { value: input.stakingVault ?? null, isWritable: false },
     stakerTokenAta: { value: input.stakerTokenAta ?? null, isWritable: true },
+    asset: { value: input.asset ?? null, isWritable: false },
     stakingVaultAta: { value: input.stakingVaultAta ?? null, isWritable: true },
     vaultRewardAta: { value: input.vaultRewardAta ?? null, isWritable: true },
     stakerRewardAta: { value: input.stakerRewardAta ?? null, isWritable: true },
@@ -457,6 +475,7 @@ export function getUnstakeInstruction<
       getAccountMeta(accounts.staker),
       getAccountMeta(accounts.stakingVault),
       getAccountMeta(accounts.stakerTokenAta),
+      getAccountMeta(accounts.asset),
       getAccountMeta(accounts.stakingVaultAta),
       getAccountMeta(accounts.vaultRewardAta),
       getAccountMeta(accounts.stakerRewardAta),
@@ -473,6 +492,7 @@ export function getUnstakeInstruction<
     TAccountStaker,
     TAccountStakingVault,
     TAccountStakerTokenAta,
+    TAccountAsset,
     TAccountStakingVaultAta,
     TAccountVaultRewardAta,
     TAccountStakerRewardAta,
@@ -493,14 +513,15 @@ export type ParsedUnstakeInstruction<
     staker: TAccountMetas[0];
     stakingVault: TAccountMetas[1];
     stakerTokenAta: TAccountMetas[2];
-    stakingVaultAta: TAccountMetas[3];
-    vaultRewardAta: TAccountMetas[4];
-    stakerRewardAta: TAccountMetas[5];
-    rewardTokenMint: TAccountMetas[6];
-    stakingTokenMint: TAccountMetas[7];
-    tokenProgram: TAccountMetas[8];
-    associatedTokenProgram: TAccountMetas[9];
-    systemProgram: TAccountMetas[10];
+    asset: TAccountMetas[3];
+    stakingVaultAta: TAccountMetas[4];
+    vaultRewardAta: TAccountMetas[5];
+    stakerRewardAta: TAccountMetas[6];
+    rewardTokenMint: TAccountMetas[7];
+    stakingTokenMint: TAccountMetas[8];
+    tokenProgram: TAccountMetas[9];
+    associatedTokenProgram: TAccountMetas[10];
+    systemProgram: TAccountMetas[11];
   };
   data: UnstakeInstructionData;
 };
@@ -513,7 +534,7 @@ export function parseUnstakeInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedUnstakeInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 11) {
+  if (instruction.accounts.length < 12) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -529,6 +550,7 @@ export function parseUnstakeInstruction<
       staker: getNextAccount(),
       stakingVault: getNextAccount(),
       stakerTokenAta: getNextAccount(),
+      asset: getNextAccount(),
       stakingVaultAta: getNextAccount(),
       vaultRewardAta: getNextAccount(),
       stakerRewardAta: getNextAccount(),

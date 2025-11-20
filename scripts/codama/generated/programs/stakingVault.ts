@@ -26,6 +26,7 @@ export const STAKING_VAULT_PROGRAM_ADDRESS =
   'DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ' as Address<'DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ'>;
 
 export enum StakingVaultAccount {
+  BaseAssetV1,
   StakingVault,
 }
 
@@ -33,6 +34,15 @@ export function identifyStakingVaultAccount(
   account: { data: ReadonlyUint8Array } | ReadonlyUint8Array
 ): StakingVaultAccount {
   const data = 'data' in account ? account.data : account;
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 1).encode(new Uint8Array([1])),
+      0
+    )
+  ) {
+    return StakingVaultAccount.BaseAssetV1;
+  }
   if (
     containsBytes(
       data,
