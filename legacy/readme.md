@@ -63,11 +63,11 @@ Each use case leverages the core features of:
 
 ## Architecture
 
-![Simple User Flow](diagrams/DePIN%20Staking%20Vault.png)
+![Simple User Flow](../diagrams/DePIN%20Staking%20Vault.png)
 
 **Technical Details**
 
-![Technical Architecture](diagrams/technical-diaram.png)
+![Technical Architecture](../diagrams/technical-diaram.png)
 
 ## User Stories
 

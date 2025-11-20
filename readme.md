@@ -127,7 +127,11 @@ DePIN operators need capital to stake before operating. This protocol unlocks li
 * Future: store metadata on NFT using MPL attributes
 
 ---
+## **🏗️ Architecture Overview**
 
+### **High-Level System Design**
+
+![Simple User Flow](/diagrams/simple-arch.png)
 
 ## **⚡ Installation & Quick Start (Local Only)**
 
