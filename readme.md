@@ -133,6 +133,10 @@ DePIN operators need capital to stake before operating. This protocol unlocks li
 
 ![Simple User Flow](/diagrams/simple-arch.png)
 
+### **Technical Design**
+
+![Simple User Flow](/diagrams/arch-technical.png)
+
 ## **⚡ Installation & Quick Start (Local Only)**
 
 > **The protocol is still under active development.
@@ -207,27 +211,16 @@ Execute:
 ```sh
 anchor run open
 ```
-
-After running, **copy values from logs**:
-
-* **asset address (NFT mint)**
-* **staking token address**
-
-These will be required for the next step.
-
 ---
 
 #### **Step 4️⃣ Stake to the Vault**
-
-Before running, open the script:
+Runs the script located at:
 
 ```
 scripts/stake.ts
 ```
 
-Update arguments (vault, asset, staking token).
-
-Then run:
+Execute:
 
 ```sh
 anchor run stake
