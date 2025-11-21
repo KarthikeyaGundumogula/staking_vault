@@ -127,9 +127,9 @@ This is still in the development phase. To test the program locally, follow thes
 Devnet ProgramId - `6AD9gckrLi1LxJuS6TJeA4myevWbSGULYKHc3o2mJkzu`
 
 1. **Create Vault Transaction**: Open Instruction to create vault with params : `3Qi1saUXRo7rDZUbML9LiJRAGwhQfKgnPYLb3kncx4pFn5MVmCBt8jWJiZTyUAtyQ2DxJuvoYtDEY3hVgKbGGbjt`
-   ![Create Vault Transaction success](diagrams/Open.png)
+   ![Create Vault Transaction success](../diagrams/Open.png)
 2. **Stake Tokens Transaction**: Stake Instruction to stake tokens into the vault : `2GpQCmobi5Cw63dkZrenSe777joVHtmqMK4zXevXrDb7sM8bapj8UHqzUkJTUeVuMZqJtTcsoF4Zy6dYwvcvfA73`
-   ![Stake Transaction success](diagrams/stake.png)
+   ![Stake Transaction success](../diagrams/stake.png)
 3. **Unstake Tokens Transaction**: Unstake Instruction to unstake tokens from the vault :
    `3HwWJnChdRHJMLG8b94sSVN6yg7WxqqbwgbobxfqkzB2ueFxKvEg4dpoupzwg9tTE1dghhvWDLBTrqQx6X23iT6W`
-   ![Unstake Transaction success](diagrams/unstake.png)
+   ![Unstake Transaction success](../diagrams/unstake.png)

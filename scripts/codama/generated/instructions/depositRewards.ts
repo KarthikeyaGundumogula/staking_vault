@@ -57,6 +57,7 @@ export type DepositRewardsInstruction<
   TAccountStakingVault extends string | AccountMeta<string> = string,
   TAccountRewardTokenMint extends string | AccountMeta<string> = string,
   TAccountVaultRewardTokenAta extends string | AccountMeta<string> = string,
+  TAccountProviderRewardTokenAta extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends
     | string
     | AccountMeta<string> = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
@@ -84,6 +85,9 @@ export type DepositRewardsInstruction<
       TAccountVaultRewardTokenAta extends string
         ? WritableAccount<TAccountVaultRewardTokenAta>
         : TAccountVaultRewardTokenAta,
+      TAccountProviderRewardTokenAta extends string
+        ? WritableAccount<TAccountProviderRewardTokenAta>
+        : TAccountProviderRewardTokenAta,
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
@@ -136,6 +140,7 @@ export type DepositRewardsAsyncInput<
   TAccountStakingVault extends string = string,
   TAccountRewardTokenMint extends string = string,
   TAccountVaultRewardTokenAta extends string = string,
+  TAccountProviderRewardTokenAta extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
@@ -144,6 +149,7 @@ export type DepositRewardsAsyncInput<
   stakingVault: Address<TAccountStakingVault>;
   rewardTokenMint: Address<TAccountRewardTokenMint>;
   vaultRewardTokenAta?: Address<TAccountVaultRewardTokenAta>;
+  providerRewardTokenAta?: Address<TAccountProviderRewardTokenAta>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
@@ -155,6 +161,7 @@ export async function getDepositRewardsInstructionAsync<
   TAccountStakingVault extends string,
   TAccountRewardTokenMint extends string,
   TAccountVaultRewardTokenAta extends string,
+  TAccountProviderRewardTokenAta extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
@@ -165,6 +172,7 @@ export async function getDepositRewardsInstructionAsync<
     TAccountStakingVault,
     TAccountRewardTokenMint,
     TAccountVaultRewardTokenAta,
+    TAccountProviderRewardTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
@@ -177,6 +185,7 @@ export async function getDepositRewardsInstructionAsync<
     TAccountStakingVault,
     TAccountRewardTokenMint,
     TAccountVaultRewardTokenAta,
+    TAccountProviderRewardTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
@@ -196,6 +205,10 @@ export async function getDepositRewardsInstructionAsync<
     },
     vaultRewardTokenAta: {
       value: input.vaultRewardTokenAta ?? null,
+      isWritable: true,
+    },
+    providerRewardTokenAta: {
+      value: input.providerRewardTokenAta ?? null,
       isWritable: true,
     },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
@@ -231,6 +244,19 @@ export async function getDepositRewardsInstructionAsync<
       ],
     });
   }
+  if (!accounts.providerRewardTokenAta.value) {
+    accounts.providerRewardTokenAta.value = await getProgramDerivedAddress({
+      programAddress:
+        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
+      seeds: [
+        getAddressEncoder().encode(expectAddress(accounts.provider.value)),
+        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
+        getAddressEncoder().encode(
+          expectAddress(accounts.rewardTokenMint.value)
+        ),
+      ],
+    });
+  }
   if (!accounts.associatedTokenProgram.value) {
     accounts.associatedTokenProgram.value =
       'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
@@ -247,6 +273,7 @@ export async function getDepositRewardsInstructionAsync<
       getAccountMeta(accounts.stakingVault),
       getAccountMeta(accounts.rewardTokenMint),
       getAccountMeta(accounts.vaultRewardTokenAta),
+      getAccountMeta(accounts.providerRewardTokenAta),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
@@ -261,6 +288,7 @@ export async function getDepositRewardsInstructionAsync<
     TAccountStakingVault,
     TAccountRewardTokenMint,
     TAccountVaultRewardTokenAta,
+    TAccountProviderRewardTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
@@ -272,6 +300,7 @@ export type DepositRewardsInput<
   TAccountStakingVault extends string = string,
   TAccountRewardTokenMint extends string = string,
   TAccountVaultRewardTokenAta extends string = string,
+  TAccountProviderRewardTokenAta extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
@@ -280,6 +309,7 @@ export type DepositRewardsInput<
   stakingVault: Address<TAccountStakingVault>;
   rewardTokenMint: Address<TAccountRewardTokenMint>;
   vaultRewardTokenAta: Address<TAccountVaultRewardTokenAta>;
+  providerRewardTokenAta: Address<TAccountProviderRewardTokenAta>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
@@ -291,6 +321,7 @@ export function getDepositRewardsInstruction<
   TAccountStakingVault extends string,
   TAccountRewardTokenMint extends string,
   TAccountVaultRewardTokenAta extends string,
+  TAccountProviderRewardTokenAta extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
@@ -301,6 +332,7 @@ export function getDepositRewardsInstruction<
     TAccountStakingVault,
     TAccountRewardTokenMint,
     TAccountVaultRewardTokenAta,
+    TAccountProviderRewardTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
@@ -312,6 +344,7 @@ export function getDepositRewardsInstruction<
   TAccountStakingVault,
   TAccountRewardTokenMint,
   TAccountVaultRewardTokenAta,
+  TAccountProviderRewardTokenAta,
   TAccountTokenProgram,
   TAccountAssociatedTokenProgram,
   TAccountSystemProgram
@@ -330,6 +363,10 @@ export function getDepositRewardsInstruction<
     },
     vaultRewardTokenAta: {
       value: input.vaultRewardTokenAta ?? null,
+      isWritable: true,
+    },
+    providerRewardTokenAta: {
+      value: input.providerRewardTokenAta ?? null,
       isWritable: true,
     },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
@@ -368,6 +405,7 @@ export function getDepositRewardsInstruction<
       getAccountMeta(accounts.stakingVault),
       getAccountMeta(accounts.rewardTokenMint),
       getAccountMeta(accounts.vaultRewardTokenAta),
+      getAccountMeta(accounts.providerRewardTokenAta),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
@@ -382,6 +420,7 @@ export function getDepositRewardsInstruction<
     TAccountStakingVault,
     TAccountRewardTokenMint,
     TAccountVaultRewardTokenAta,
+    TAccountProviderRewardTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
@@ -398,9 +437,10 @@ export type ParsedDepositRewardsInstruction<
     stakingVault: TAccountMetas[1];
     rewardTokenMint: TAccountMetas[2];
     vaultRewardTokenAta: TAccountMetas[3];
-    tokenProgram: TAccountMetas[4];
-    associatedTokenProgram: TAccountMetas[5];
-    systemProgram: TAccountMetas[6];
+    providerRewardTokenAta: TAccountMetas[4];
+    tokenProgram: TAccountMetas[5];
+    associatedTokenProgram: TAccountMetas[6];
+    systemProgram: TAccountMetas[7];
   };
   data: DepositRewardsInstructionData;
 };
@@ -413,7 +453,7 @@ export function parseDepositRewardsInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedDepositRewardsInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 7) {
+  if (instruction.accounts.length < 8) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -430,6 +470,7 @@ export function parseDepositRewardsInstruction<
       stakingVault: getNextAccount(),
       rewardTokenMint: getNextAccount(),
       vaultRewardTokenAta: getNextAccount(),
+      providerRewardTokenAta: getNextAccount(),
       tokenProgram: getNextAccount(),
       associatedTokenProgram: getNextAccount(),
       systemProgram: getNextAccount(),

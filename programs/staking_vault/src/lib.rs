@@ -35,8 +35,10 @@ pub mod staking_vault {
         );
         let staked_amount = ctx.accounts.staking_vault_ata.amount;
         ctx.accounts.transfer_staked_tokens(staked_amount)?;
-        let reward_amount = ctx.accounts.vault_reward_ata.amount;
-        ctx.accounts.transfer_rewards(reward_amount)?;
+        let reward_amount = &ctx.accounts.vault_reward_ata.amount;
+        if *reward_amount > 0 {
+            ctx.accounts.transfer_rewards(*reward_amount)?;
+        }
         Ok(())
     }
 

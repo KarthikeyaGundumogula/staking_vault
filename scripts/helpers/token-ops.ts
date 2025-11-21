@@ -138,8 +138,6 @@ export async function fund_rewardToken(client: Client,mint:Address) {
     client.staker.address
   );
   await mintFT(client, client.provider.address, mint);
-
-  // await mintFT(client, client.god.address, mint.address);
   // await transferFt(client, client.staker.address, mint.address, 4000);
   // const { value: providerBalance } = await client.rpc
   //   .getTokenAccountBalance(tokenAccs.provider_ata)
@@ -160,6 +158,6 @@ export async function fund_stakingToken(client: Client,mint:Address) {
 async function main() {
   const client = await getClient();
   const mint = await createFungibleToken(client);
-  const mitn = await fund_stakingToken(client,mint.address);
+  await fund_rewardToken(client,mint.address);
 }
 main();

@@ -23,6 +23,13 @@ pub struct DepositRewards<'info> {
       associated_token::token_program = token_program
     )]
     pub vault_reward_token_ata: InterfaceAccount<'info, TokenAccount>,
+    #[account(
+      mut,
+      associated_token::mint = reward_token_mint,
+      associated_token::authority = provider,
+      associated_token::token_program = token_program
+    )]
+    pub provider_reward_token_ata: InterfaceAccount<'info, TokenAccount>,
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
@@ -30,16 +37,15 @@ pub struct DepositRewards<'info> {
 
 impl<'info> DepositRewards<'info> {
     pub fn deposit_rewards(&mut self, amount: u64) -> Result<()> {
-        let transfer_accounts = TransferChecked {
-            from: self.provider.to_account_info(),
+        let transfer_staking_token_accounts = TransferChecked {
+            from: self.provider_reward_token_ata.to_account_info(),
             to: self.vault_reward_token_ata.to_account_info(),
             authority: self.provider.to_account_info(),
             mint: self.reward_token_mint.to_account_info(),
         };
-        let cpi_program = self.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new(cpi_program, transfer_accounts);
+        let token_program = self.token_program.to_account_info();
+        let cpi_ctx = CpiContext::new(token_program, transfer_staking_token_accounts);
         transfer_checked(cpi_ctx, amount, self.reward_token_mint.decimals)?;
-
         Ok(())
     }
 }

@@ -19,7 +19,6 @@ import {
   STAKING_VAULT_ID,
   airdrop,
 } from "./helpers/setUp";
-import { MPL_CORE_PROGRAM_ID } from "@metaplex-foundation/mpl-core";
 import { fund_stakingToken } from "./helpers/token-ops";
 
 async function stake() {
@@ -27,31 +26,18 @@ async function stake() {
   airdrop(client, client.staker.address);
   airdrop(client, client.provider.address);
   const STAKING_TOKEN_MINT =
-    "737MzWSJUXE4fvX7t7RxTccAtDyoN6PxNdpvb7XX6qzR" as Address; // copy paste the mint address used during open vault -- get from logs of running anchor run open
-  const asset = "Y1Y9AqUJnS1CCKy6bpT5qQZtiByfqrMjqqJpgonhVmb" as Address; // copy paste the Asset address used during open vault -- get from logs of running anchor run open
+    "5QiqtpZKbqtvEkmo5qdjLPrMamb4z5kPFeUBzdT8xgEC" as Address; // copy paste the mint address used during open vault -- get from logs of running anchor run open
+  const asset = "5tP4aedjdK5MGMrKErQxE4AZVJmXdVx4vADUDbNQ115f" as Address; // copy paste the Asset address used during open vault -- get from logs of running anchor run open
   await fund_stakingToken(client, STAKING_TOKEN_MINT);
   const staking_token_atas = await getAccounts(
     STAKING_TOKEN_MINT,
     client.provider.address,
     client.staker.address
   );
-  console.log("Accounts being passed to stakeInx instruction:", {
-    staker: client.staker.address,
-    stakingVault: staking_token_atas.vault_acc,
-    stakerTokenAta: staking_token_atas.staker_ata,
-    stakingVaultAta: staking_token_atas.vault_ata,
-    stakingTokenMint: STAKING_TOKEN_MINT,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
-    amount: BigInt(100000),
-  });
-
   const vault_data = await fetchStakingVault(
     client.rpc,
-    staking_token_atas.vault_acc
+    staking_token_atas.vault_acc 
   );
-  console.log("Fetched Vault Data:", vault_data);
   const stakeInx = getStakeInstruction(
     {
       staker: client.staker,

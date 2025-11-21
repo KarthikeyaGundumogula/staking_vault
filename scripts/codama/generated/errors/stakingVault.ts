@@ -14,24 +14,20 @@ import {
 } from 'gill';
 import { STAKING_VAULT_PROGRAM_ADDRESS } from '../programs';
 
-/** OnlyNFTOwner: Only holder of the NFT can only stake */
-export const STAKING_VAULT_ERROR__ONLY_N_F_T_OWNER = 0x1770; // 6000
-/** AmountTooLow: Staked amount is below the minimum allowed. */
-export const STAKING_VAULT_ERROR__AMOUNT_TOO_LOW = 0x1771; // 6001
-/** AmountTooHigh: Staked amount exceeds the maximum allowed. */
-export const STAKING_VAULT_ERROR__AMOUNT_TOO_HIGH = 0x1772; // 6002
+/** StakingPeriodNotCompleted: The staking period not completed yet */
+export const STAKING_VAULT_ERROR__STAKING_PERIOD_NOT_COMPLETED = 0x1770; // 6000
+/** VaultNotEmpty: Vault still holds tokens unstake first */
+export const STAKING_VAULT_ERROR__VAULT_NOT_EMPTY = 0x1771; // 6001
 
 export type StakingVaultError =
-  | typeof STAKING_VAULT_ERROR__AMOUNT_TOO_HIGH
-  | typeof STAKING_VAULT_ERROR__AMOUNT_TOO_LOW
-  | typeof STAKING_VAULT_ERROR__ONLY_N_F_T_OWNER;
+  | typeof STAKING_VAULT_ERROR__STAKING_PERIOD_NOT_COMPLETED
+  | typeof STAKING_VAULT_ERROR__VAULT_NOT_EMPTY;
 
 let stakingVaultErrorMessages: Record<StakingVaultError, string> | undefined;
 if (process.env.NODE_ENV !== 'production') {
   stakingVaultErrorMessages = {
-    [STAKING_VAULT_ERROR__AMOUNT_TOO_HIGH]: `Staked amount exceeds the maximum allowed.`,
-    [STAKING_VAULT_ERROR__AMOUNT_TOO_LOW]: `Staked amount is below the minimum allowed.`,
-    [STAKING_VAULT_ERROR__ONLY_N_F_T_OWNER]: `Only holder of the NFT can only stake`,
+    [STAKING_VAULT_ERROR__STAKING_PERIOD_NOT_COMPLETED]: `The staking period not completed yet`,
+    [STAKING_VAULT_ERROR__VAULT_NOT_EMPTY]: `Vault still holds tokens unstake first`,
   };
 }
 
