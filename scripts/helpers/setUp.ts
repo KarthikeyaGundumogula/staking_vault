@@ -19,7 +19,6 @@ import { getAssociatedTokenAccountAddress } from "gill/programs";
 
 export type Token_Accounts = {
   mint_address: Address;
-  vault_acc: Address;
   provider_ata: Address;
   vault_ata: Address;
   staker_ata: Address;
@@ -32,14 +31,21 @@ export type Client = {
   god: KeyPairSigner;
   staker: KeyPairSigner;
   provider: KeyPairSigner;
+  vault_state_pda: Address;
 };
 
 export async function getClient(): Promise<Client> {
+  const SEED = "staking_vault";
+  const addressEncoder = getAddressEncoder();
   const { rpc, sendAndConfirmTransaction, rpcSubscriptions } =
     createSolanaClient({ urlOrMoniker: "localnet" });
   const god = await loadKeypairSignerFromFile();
   const staker = await loadKeypairSignerFromFile("provider-wallet.json");
   const provider = await loadKeypairSignerFromFile("staker-wallet.json");
+  const [vault_state_pda] = await getProgramDerivedAddress({
+    programAddress: STAKING_VAULT_ID as Address,
+    seeds: [SEED, addressEncoder.encode(provider.address)],
+  });
   return {
     rpc,
     sendAndConfirmTransaction,
@@ -47,6 +53,7 @@ export async function getClient(): Promise<Client> {
     rpcSubscriptions,
     staker,
     provider,
+    vault_state_pda,
   };
 }
 
@@ -92,7 +99,6 @@ export async function getAccounts(
     provider_ata: proivider_ata,
     staker_ata: staker_ata,
     vault_ata: vault_ata,
-    vault_acc: vault_state_pda,
   };
 
   return tokenAcc;

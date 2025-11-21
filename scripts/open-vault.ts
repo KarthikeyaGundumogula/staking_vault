@@ -59,7 +59,7 @@ async function open() {
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
     tokenProgram: TOKEN_PROGRAM_ADDRESS,
     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
-    stakingVault: reward_token_atas.vault_acc,
+    stakingVault:client.vault_state_pda,
     stakerArg: client.staker.address,
   });
   const openInx = getOpenInstruction(
@@ -80,7 +80,7 @@ async function open() {
       minAmount: BigInt(0),
       maxAmount: BigInt(10000000000),
       initialDeposit: BigInt(0),
-      stakingVault: reward_token_atas.vault_acc,
+      stakingVault: client.vault_state_pda,
       stakerArg: client.staker.address,
     },
     { programAddress: STAKING_VAULT_ID as Address }

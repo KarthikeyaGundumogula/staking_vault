@@ -29,9 +29,6 @@ describe.only("staking_vault", () => {
   let staker: anchor.web3.Keypair;
   let god: anchor.web3.Keypair;
   let un_authorized_staker: anchor.web3.Keypair;
-  let stakeAccounts;
-  let unStakeAccounts;
-
   const umi = createUmi("http://0.0.0.0:8899", "confirmed");
   const TOKEN_DECIMALS = 1_000_000; // 6 decimals
   const duration = new anchor.BN(1); // 1 second for testing only
@@ -50,24 +47,7 @@ describe.only("staking_vault", () => {
     staker = anchor.web3.Keypair.generate();
     god = provider;
     un_authorized_staker = anchor.web3.Keypair.generate();
-
     setupData = await setUp(provider, staker, god, un_authorized_staker);
-    stakeAccounts = {
-      staker: staker.publicKey,
-      stakingVault: setupData.vault_state_pda,
-      stakingTokenMint: setupData.staking_mint,
-      stakerTokenAta: setupData.staker_staking_ata,
-      stakingVaultAta: setupData.vault_staking_ata,
-      systemProgram: SYSTEM_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-    };
-    unStakeAccounts = {
-      ...stakeAccounts,
-      vaultRewardAta: setupData.vault_reward_ata,
-      stakerRewardAta: setupData.staker_reward_ata,
-      rewardTokenMint: setupData.reward_mint,
-    };
   });
 
   it("Open Staking Vault", async () => {
@@ -220,7 +200,38 @@ describe.only("staking_vault", () => {
         staker_reward_balance_pre_unstake.value.uiAmount
     );
   });
-
+  it(" deposit Reawards", async () => {
+    console.log("--Depositing Rewards--");
+    const vault_reward_balance_pre_deposit =
+      await connection.getTokenAccountBalance(setupData.vault_reward_ata);
+    try {
+      const tx = await program.methods
+        .depositRewards(new anchor.BN(5000_000_000)) // 5000 tokens
+        .accountsStrict({
+          provider: provider.publicKey,
+          stakingVault: setupData.vault_state_pda,
+          rewardTokenMint: setupData.reward_mint,
+          vaultRewardTokenAta: setupData.vault_reward_ata,
+          providerRewardTokenAta: setupData.provider_reward_ata,
+          systemProgram: SYSTEM_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        })
+        .signers([provider])
+        .rpc();
+      console.log("Deposit Rewards transaction: ", tx);
+    } catch (error) {
+      console.error("Error in depositing rewards: ", error);
+    }
+    // -- Deposit Rewards assertions -- //
+    const vault_reward_balance_post_deposit =
+      await connection.getTokenAccountBalance(setupData.vault_reward_ata);
+    assert.equal(
+      vault_reward_balance_post_deposit.value.uiAmount -
+        vault_reward_balance_pre_deposit.value.uiAmount,
+      5000
+    );
+  });
   it("Fail Stake from Unauthorized Staker", async () => {
     console.log("--Staking Tokens from Unauthorized Staker--");
     try {

@@ -4,6 +4,7 @@ import {
   signTransactionMessageWithSigners,
   getExplorerLink,
   getSignatureFromTransaction,
+  Account
 } from "gill";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
@@ -12,17 +13,20 @@ import {
 } from "gill/programs";
 import {
   getDepositRewardsInstruction,
-  STAKING_VAULT_PROGRAM_ADDRESS,
+  fetchStakingVault
 } from "./codama/generated";
-import { Client, getClient, getAccounts, airdrop } from "./helpers/setUp";
+import { Client, getClient, getAccounts, airdrop, STAKING_VAULT_ID } from "./helpers/setUp";
 import { fund_rewardToken } from "./helpers/token-ops";
 
 async function depositRewards() {
   const client: Client = await getClient();
   airdrop(client, client.staker.address);
-  airdrop(client, client.provider.address); // copy paste the Asset address used during open vault -- get from logs of running anchor run open
-  const REWARD_TOKEN_MINT =
-    "AMtERDjDZi1ooaVHv92XyQDXrdt8Nr9pd7oyrrbx3WR7" as Address;
+  airdrop(client, client.provider.address); 
+  const vault_data = await fetchStakingVault(
+      client.rpc,
+      client.vault_state_pda
+    );
+  const REWARD_TOKEN_MINT = vault_data.data.rewardMint;
   const reward_token_atas = await getAccounts(
     REWARD_TOKEN_MINT,
     client.provider.address,
@@ -31,7 +35,7 @@ async function depositRewards() {
   await fund_rewardToken(client, REWARD_TOKEN_MINT);
   console.log("Accounts being passed to depositRewards instruction:", {
     provider: client.provider.address,
-    stakingVault: reward_token_atas.vault_acc,
+    stakingVault: client.vault_state_pda,
     rewardTokenMint: REWARD_TOKEN_MINT,
     vaultRewardTokenAta: reward_token_atas.vault_ata,
     providerRewardTokenAta: reward_token_atas.provider_ata,
@@ -39,7 +43,7 @@ async function depositRewards() {
   const depositIns = getDepositRewardsInstruction(
     {
       provider: client.provider,
-      stakingVault: reward_token_atas.vault_acc,
+      stakingVault: client.vault_state_pda,
       rewardTokenMint: REWARD_TOKEN_MINT,
       vaultRewardTokenAta: reward_token_atas.vault_ata,
       providerRewardTokenAta: reward_token_atas.provider_ata,
@@ -48,10 +52,8 @@ async function depositRewards() {
       systemProgram: SYSTEM_PROGRAM_ADDRESS,
       amount: BigInt(5000),
     },
-    { programAddress: STAKING_VAULT_PROGRAM_ADDRESS }
+    { programAddress: STAKING_VAULT_ID as Address }
   );
-
-  console.log("Deposit Rewards Instruction:", depositIns);
   const { value: latestBlockhash } = await client.rpc
     .getLatestBlockhash()
     .send();
@@ -64,7 +66,7 @@ async function depositRewards() {
   try {
     await client.sendAndConfirmTransaction(signedTx);
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
   console.log(
     "Explorer Link:",

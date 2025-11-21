@@ -4,13 +4,18 @@ import {
   signTransactionMessageWithSigners,
   getExplorerLink,
   getSignatureFromTransaction,
+  Account,
 } from "gill";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
   TOKEN_PROGRAM_ADDRESS,
   SYSTEM_PROGRAM_ADDRESS,
 } from "gill/programs";
-import { getStakeInstruction, fetchStakingVault } from "./codama/generated";
+import {
+  getStakeInstruction,
+  fetchStakingVault,
+  StakingVault,
+} from "./codama/generated";
 import {
   Client,
   getClient,
@@ -25,18 +30,17 @@ async function stake() {
   const client: Client = await getClient();
   airdrop(client, client.staker.address);
   airdrop(client, client.provider.address);
-  const STAKING_TOKEN_MINT =
-    "5QiqtpZKbqtvEkmo5qdjLPrMamb4z5kPFeUBzdT8xgEC" as Address; // copy paste the mint address used during open vault -- get from logs of running anchor run open
-  const asset = "5tP4aedjdK5MGMrKErQxE4AZVJmXdVx4vADUDbNQ115f" as Address; // copy paste the Asset address used during open vault -- get from logs of running anchor run open
+  const vault_data: Account<StakingVault> = await fetchStakingVault(
+    client.rpc,
+    client.vault_state_pda
+  );
+  const STAKING_TOKEN_MINT = vault_data.data.stakingMint;
+  const asset = vault_data.data.nftMint;
   await fund_stakingToken(client, STAKING_TOKEN_MINT);
   const staking_token_atas = await getAccounts(
     STAKING_TOKEN_MINT,
     client.provider.address,
     client.staker.address
-  );
-  const vault_data = await fetchStakingVault(
-    client.rpc,
-    staking_token_atas.vault_acc 
   );
   const stakeInx = getStakeInstruction(
     {
