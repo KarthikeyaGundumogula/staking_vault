@@ -22,6 +22,7 @@ custom-panic = []
 
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+solana-sdk = "3.0.0"
 anchor-spl = "0.31.1"
 mpl-core = { version = "0.11.1", features = ["anchor"] }
 nft_marketplace = { path = "../nft_marketplace", features = ["cpi"] }
@@ -30,4 +31,3 @@ nft_marketplace = { path = "../nft_marketplace", features = ["cpi"] }
 unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(target_os, values("solana"))',
 ] }
-
