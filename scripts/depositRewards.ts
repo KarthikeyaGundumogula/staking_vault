@@ -4,7 +4,6 @@ import {
   signTransactionMessageWithSigners,
   getExplorerLink,
   getSignatureFromTransaction,
-  Account
 } from "gill";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ADDRESS,

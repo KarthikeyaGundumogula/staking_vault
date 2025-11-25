@@ -17,10 +17,10 @@ import {
   getCreateMetadataAccountV3Instruction,
   buildMintTokensTransaction,
   buildTransferTokensTransaction,
+  buildCreateTokenTransaction,
 } from "gill/programs";
 
 export async function createFungibleToken(client: Client) {
-
   const tokenProgram = TOKEN_PROGRAM_ADDRESS;
   const mintSize = getMintSize();
   const [mint, rentExemption] = await Promise.all([
@@ -131,7 +131,7 @@ export async function transferFt(
   await client.sendAndConfirmTransaction(signedTx);
 }
 
-export async function fund_rewardToken(client: Client,mint:Address) {
+export async function fund_rewardToken(client: Client, mint: Address) {
   const tokenAccs = await getAccounts(
     mint,
     client.provider.address,
@@ -146,7 +146,7 @@ export async function fund_rewardToken(client: Client,mint:Address) {
   return mint;
 }
 
-export async function fund_stakingToken(client: Client,mint:Address) {
+export async function fund_stakingToken(client: Client, mint: Address) {
   const tokenAccs = await getAccounts(
     mint,
     client.provider.address,
@@ -158,6 +158,6 @@ export async function fund_stakingToken(client: Client,mint:Address) {
 async function main() {
   const client = await getClient();
   const mint = await createFungibleToken(client);
-  await fund_rewardToken(client,mint.address);
+  await fund_rewardToken(client, mint.address);
 }
 main();

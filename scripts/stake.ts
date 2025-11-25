@@ -20,7 +20,6 @@ import {
   Client,
   getClient,
   getAccounts,
-  NFT_MARKETPLACE_ID,
   STAKING_VAULT_ID,
   airdrop,
 } from "./helpers/setUp";
