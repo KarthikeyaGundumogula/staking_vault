@@ -4,7 +4,6 @@ declare_id!("3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh");
 
 pub mod instructions;
 pub mod state;
-// pub mod tests;
 
 use instructions::*;
 

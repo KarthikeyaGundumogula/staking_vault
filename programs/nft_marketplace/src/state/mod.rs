@@ -4,6 +4,12 @@ use anchor_lang::prelude::*;
 #[derive(InitSpace)]
 pub struct Vault {
     pub receiver: Pubkey,
-    pub current_owner: Pubkey,
     pub bump: u8,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct Marketplace{
+    pub staking_program: Pubkey,
+    pub bump:u8
 }

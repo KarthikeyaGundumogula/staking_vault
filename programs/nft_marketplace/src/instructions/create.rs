@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
-use mpl_core::{instructions::CreateV2CpiBuilder, ID as MPL_CORE_ID};
+use mpl_core::{
+    instructions::{CreateCollectionV1CpiBuilder, CreateV2CpiBuilder},
+    ID as MPL_CORE_ID,
+};
 
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub struct CreateAssetArgs {
@@ -15,6 +18,10 @@ pub struct CreateAsset<'info> {
     pub payer: Signer<'info>,
     /// CHECK: this account will be checked at the calling program
     pub owner: Option<UncheckedAccount<'info>>,
+    #[account(mut)]
+    pub collection: Signer<'info>,
+    /// CHECK: this will be the PDA from vault
+    pub collection_update_authority: Option<UncheckedAccount<'info>>,
     pub system_program: Program<'info, System>,
     #[account(address = MPL_CORE_ID)]
     /// CHECK: this account is checked by the address constraint
@@ -22,16 +29,32 @@ pub struct CreateAsset<'info> {
 }
 
 impl<'info> CreateAsset<'info> {
+    pub fn create_collection(&mut self) -> Result<()> {
+        let update_authority = match &self.collection_update_authority {
+            Some(update_authority) => Some(update_authority.to_account_info()),
+            None => None,
+        };
+        CreateCollectionV1CpiBuilder::new(&self.mpl_core_program.to_account_info())
+            .collection(&self.collection.to_account_info())
+            .update_authority(update_authority.as_ref())
+            .system_program(&self.system_program.to_account_info())
+            .payer(&self.payer.to_account_info())
+            .name("Staking_Vault_V1".to_string())
+            .uri("H".to_string())
+            .invoke()?;
+        Ok(())
+    }
     pub fn create_asset(&mut self, args: CreateAssetArgs) -> Result<()> {
         let owner = match &self.owner {
             Some(owner) => Some(owner.to_account_info()),
             None => None,
         };
+
         msg!("asset minted");
 
         CreateV2CpiBuilder::new(&self.mpl_core_program.to_account_info())
             .asset(&self.asset.to_account_info())
-            .collection(None)
+            .collection(Some(&self.collection.to_account_info()))
             .authority(Some(&self.payer.to_account_info()))
             .payer(&self.payer.to_account_info())
             .owner(owner.as_ref())
