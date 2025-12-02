@@ -9,12 +9,12 @@ use nft_marketplace::program::NftMarketplace;
 
 #[derive(Accounts)]
 pub struct Close<'info> {
-    /// CHECK checked address of the provider
+    /// CHECK: checked address of the provider
     #[account( address = staking_vault.provider)]
     pub provider: UncheckedAccount<'info>,
     #[account(mut)]
     pub staker: Signer<'info>,
-    /// CHECK this will be cheked by the MPL-Program
+    /// CHECK: this will be cheked by the MPL-Program
     pub nft: UncheckedAccount<'info>,
     #[account(
       mut,
@@ -43,7 +43,7 @@ pub struct Close<'info> {
     pub reward_token_mint: InterfaceAccount<'info, Mint>,
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    /// CHECK this will be cheked at marketplace
+    /// CHECK: this will be cheked at marketplace
     pub mpl_core_program: UncheckedAccount<'info>,
     pub nft_marketplace: Program<'info, NftMarketplace>,
     pub system_program: Program<'info, System>,

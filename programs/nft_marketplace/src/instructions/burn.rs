@@ -3,13 +3,12 @@ use mpl_core::{instructions::BurnV1CpiBuilder, ID as MPL_CORE_ID};
 
 #[derive(Accounts)]
 pub struct BurnAsset<'info> {
-    /// CHECK this account holds NFT
     #[account(mut)]
     pub signer: Signer<'info>,
-    /// CHECK this will be checked by mpl-core-program
+    /// CHECK: this will be checked by mpl-core-program
     pub asset: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
-    /// CHECK this will be checked by mpl-core-program
+    /// CHECK: this will be checked by mpl-core-program
     #[account(address = MPL_CORE_ID)]
     pub mpl_core_program: UncheckedAccount<'info>,
 }

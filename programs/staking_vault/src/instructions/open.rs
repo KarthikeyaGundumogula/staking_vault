@@ -10,12 +10,9 @@ use anchor_spl::{
 };
 
 #[derive(Accounts)]
-#[instruction(nft_id:u64)]
 pub struct Open<'info> {
     #[account(mut)]
     pub provider: Signer<'info>,
-    /// CHECK staker to hold the vault
-    pub staker: UncheckedAccount<'info>,
     #[account(
       init,
       payer = provider,
@@ -46,7 +43,7 @@ pub struct Open<'info> {
     pub staking_token_mint: InterfaceAccount<'info, Mint>,
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    /// CHECK this account will be checked my the mpl_core_program
+    /// CHECK: this account will be checked my the mpl_core_program
     pub mpl_core_program: UncheckedAccount<'info>,
     pub nft_marketplace: Program<'info, NftMarketplace>,
     pub system_program: Program<'info, System>,
@@ -92,9 +89,10 @@ impl<'info> Open<'info> {
         let mint_asset_accounts = CreateAsset {
             asset: self.asset.to_account_info(),
             payer: self.provider.to_account_info(),
-            owner: Some(self.staker.to_account_info()),
+            owner: Some(self.staking_vault.to_account_info()),
             system_program: self.system_program.to_account_info(),
             mpl_core_program: self.mpl_core_program.to_account_info(),
+            collection:self.collection,
         };
 
         let mint_cpi = CpiContext::new(
