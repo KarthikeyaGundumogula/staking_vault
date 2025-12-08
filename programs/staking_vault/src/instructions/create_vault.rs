@@ -86,28 +86,28 @@ impl<'info> Open<'info> {
     }
 
     pub fn mint_asset(&mut self) -> Result<()> {
-        let mint_asset_accounts = CreateAsset {
-            asset: self.asset.to_account_info(),
-            payer: self.provider.to_account_info(),
-            owner: Some(self.staking_vault.to_account_info()),
-            system_program: self.system_program.to_account_info(),
-            mpl_core_program: self.mpl_core_program.to_account_info(),
-            collection:self.collection,
-        };
+        // let mint_asset_accounts = CreateAsset {
+        //     asset: self.asset.to_account_info(),
+        //     payer: self.provider.to_account_info(),
+        //     owner: Some(self.staking_vault.to_account_info()),
+        //     system_program: self.system_program.to_account_info(),
+        //     mpl_core_program: self.mpl_core_program.to_account_info(),
+        //     collection:self.collection,
+        // };
 
-        let mint_cpi = CpiContext::new(
-            self.nft_marketplace.to_account_info(),
-            mint_asset_accounts
-        );
+        // let mint_cpi = CpiContext::new(
+        //     self.nft_marketplace.to_account_info(),
+        //     mint_asset_accounts
+        // );
 
-        let args = CreateAssetArgs {
-            name: String::from("Vault NFT"),
-            uri: String::from("MINT_URI"),
-        };
+        // let args = CreateAssetArgs {
+        //     name: String::from("Vault NFT"),
+        //     uri: String::from("MINT_URI"),
+        // };
 
-        // call the CPI — now the staking_vault PDA will correctly be treated as a 'signer'
-        nft_marketplace::cpi::create_core_asset(mint_cpi, args)
-            .map_err(|_| error!(StakingError::CPIFail))?;
+        // // call the CPI — now the staking_vault PDA will correctly be treated as a 'signer'
+        // nft_marketplace::cpi::create_core_asset(mint_cpi, args)
+        //     .map_err(|_| error!(StakingError::CPIFail))?;
 
         Ok(())
     }

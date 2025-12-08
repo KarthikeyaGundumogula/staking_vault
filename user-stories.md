@@ -20,7 +20,8 @@
 ## **Active Phase Behavior**
 
 * As a position holder, when rewards are deposited by the reward distributor, my claimable rewards increase proportionally to my stake.
-* As a position holder, when I claim rewards, only the accumulated rewards are transferred and my principal remains locked.
+* As a position holder, when I claim rewards, only the accumulated rewards are transferred.
+* As a position holder, When I try to Unlock prinicipal, the transaction failes with "Active Phase, Rewards Locked" error.
 * As a position holder, when I list my Position NFT, the marketplace marks it as listed.
 * As a buyer, when I purchase a listed Position NFT, I become the new owner of the locked position and rewards.
 * As a seller, when I try to list a Position NFT I do not own, the transaction fails with "Unauthorized".

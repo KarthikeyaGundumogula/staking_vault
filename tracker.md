@@ -6,41 +6,46 @@
 ## 🟦 To Do
 
 ### NFT Program
-- [ ] T1: Implement create collection instruction
-- [ ] T2: Implement list_position
-- [ ] T3: Implement delist_position
-- [ ] T4: Implement burn position
+- [ ] T1: Implement set_authorities instruction
+- [ ] T2: Implement create collection instruction
+- [ ] T3: Implement list_position
+- [ ] T4: Implement delist_position
+- [ ] T5: Implement burn position
 
 ### Capital Program
-- [ ] T1: Implement vault initialization
-- [ ] T2: Implement create collection cpi 
-- [ ] T3: Implement PositionState initialization
-- [ ] T4: Implement deposit_capital 
-- [ ] T5: Implement mint position nft cpi
-- [ ] T6: Implement withdraw_capital_early
-- [ ] T7: Implement burn position nft cpi
-- [ ] T8: Implement update_position_after_transfer
-- [ ] T9: Implement burn_position_nft cpi
-- [ ] T10: Implement update_vault instruction utils
-- [ ] T11: Implement update_position instruction utils
-- [ ] T12: Implement calc_reward_utils
-- [ ] T13: Implement deposit_rewards
-- [ ] T14: Implement claim_rewards
-- [ ] T15: Implement halt_vault instruction
-- [ ] T16: Implement raise_slash_request
-- [ ] T17: Implement submit_slash_proof
-- [ ] T18: Implement execute_slash
-- [ ] T19: Implement resolve_dispute_without_slash
-- [ ] T20: Implement withdraw_principal
-- [ ] T21: Implement admin_rescue_tokens
-- [ ] T22: Implement admin_pause_vault
-- [ ] T23: Implement admin_resume_vault
-- [ ] T24: Add comprehensive Anchor error codes
-- [ ] T25: Event logging for all key flows
+- [ ] T1: Implement Program initialization
+- [ ] T2: Implement vault initialization
+- [ ] T3: Implement create collection cpi 
+- [ ] T4: Implement PositionState initialization
+- [ ] T5: Implement deposit_capital 
+- [ ] T6: Implement mint position nft cpi
+- [ ] T7: Implement withdraw_capital_early
+- [ ] T8: Implement burn position nft cpi
+- [ ] T9: Implement update_position_after_transfer
+- [ ] T10: Implement burn_position_nft cpi
+- [ ] T11: Implement update_vault instruction utils
+- [ ] T12: Implement update_position instruction utils
+- [ ] T13: Implement calc_reward_utils
+- [ ] T14: Implement deposit_rewards
+- [ ] T15: Implement claim_rewards
+- [ ] T16: Implement halt_vault instruction
+- [ ] T17: Implement raise_slash_request
+- [ ] T18: Implement submit_slash_proof
+- [ ] T19: Implement execute_slash
+- [ ] T20: Implement resolve_dispute_without_slash
+- [ ] T21: Implement withdraw_principal
+- [ ] T22: Implement admin_rescue_tokens
+- [ ] T23: Implement admin_pause_vault
+- [ ] T24: Implement admin_resume_vault
+- [ ] T25: Add comprehensive Anchor error codes
+- [ ] T26: Event logging for all key flows
 
 
-## 🟨 In Progress
-- [ ] 
+## 🟨 In Progress - Capital Program
+- [ ] T1: Implement Program initialization
+
+## 🟨 In Progress - NFT Program
+- [ ] T1: Implement set_authorities instruction
 
 
 ## 🟩 Done

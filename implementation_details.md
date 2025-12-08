@@ -1,0 +1,12 @@
+### Intialize_Program_Instruction
+  - Create Authority PDA which stores
+    - Nft_Program_ID
+    - Agents vector of pubkeys
+    - Oracle Data config
+  - Add default authorities in NFT Program
+    - Admin: Pubkey
+    - Mint authority: PDA
+    - Burn authority: PDA
+  - Early Unlock Fee: 2% (configurable by admin)
+  - Oracle Configuration
+  - Vault Agents/ Attestors
