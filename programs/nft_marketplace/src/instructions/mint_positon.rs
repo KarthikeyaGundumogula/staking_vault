@@ -29,21 +29,6 @@ pub struct CreateAsset<'info> {
 }
 
 impl<'info> CreateAsset<'info> {
-    pub fn create_collection(&mut self) -> Result<()> {
-        let update_authority = match &self.collection_update_authority {
-            Some(update_authority) => Some(update_authority.to_account_info()),
-            None => None,
-        };
-        CreateCollectionV1CpiBuilder::new(&self.mpl_core_program.to_account_info())
-            .collection(&self.collection.to_account_info())
-            .update_authority(update_authority.as_ref())
-            .system_program(&self.system_program.to_account_info())
-            .payer(&self.payer.to_account_info())
-            .name("Staking_Vault_V1".to_string())
-            .uri("H".to_string())
-            .invoke()?;
-        Ok(())
-    }
     pub fn create_asset(&mut self, args: CreateAssetArgs) -> Result<()> {
         let owner = match &self.owner {
             Some(owner) => Some(owner.to_account_info()),

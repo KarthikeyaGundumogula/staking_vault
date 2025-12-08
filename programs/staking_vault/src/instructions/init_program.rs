@@ -27,16 +27,18 @@ pub struct InitProgram<'info> {
 impl<'info> InitProgram<'info> {
     pub fn init(
         &mut self,
-        agent: Pubkey,
-        early_unlock_fee: u64,
+        params:InitParams,
         bumps: InitProgramBumps,
     ) -> Result<()> {
         self.config.set_inner(Config {
             nft_program: *self.nft_program.key,
             admin: *self.admin.key,
-            agent,
-            early_unlock_fee,
+            agent:params.agent,
             bump: bumps.config,
+            early_unlock_fee:params.early_unlock_fee,
+            dispute_window:params.dispute_window,
+            min_lock_duration:params.min_lock_duration,
+            max_lock_duration:params.max_lock_duration
         });
         Ok(())
     }
@@ -58,4 +60,13 @@ impl<'info> InitProgram<'info> {
             .map_err(|_| error!(InitError::CPIFail))?;
         Ok(())
     }
+}
+
+#[derive(AnchorDeserialize,AnchorSerialize)]
+pub struct InitParams{
+    agent: Pubkey,
+    early_unlock_fee:u64,
+    dispute_window:i64,
+    max_lock_duration:i64,
+    min_lock_duration:i64
 }

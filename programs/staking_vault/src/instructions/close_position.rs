@@ -1,4 +1,4 @@
-use crate::state::StakingVault;
+use crate::state::Vault;
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
@@ -14,7 +14,7 @@ pub struct UnStake<'info> {
       seeds = [b"staking_vault",staking_vault.provider.key().as_ref()],
       bump = staking_vault.bump,
     )]
-    pub staking_vault: Account<'info, StakingVault>,
+    pub staking_vault: Account<'info, Vault>,
     #[account(
       mut,
       associated_token::mint = staking_token_mint,
@@ -23,7 +23,7 @@ pub struct UnStake<'info> {
     )]
     pub staker_token_ata: InterfaceAccount<'info, TokenAccount>,
     #[account(address = staking_vault.nft_mint)]
-    pub asset: Account<'info,BaseAssetV1>,
+    pub asset: Account<'info, BaseAssetV1>,
     #[account(
       mut,
       associated_token::mint = staking_token_mint,
@@ -54,7 +54,10 @@ pub struct UnStake<'info> {
 
 impl<'info> UnStake<'info> {
     pub fn transfer_staked_tokens(&self, amount: u64) -> Result<()> {
-      require!(self.asset.owner == self.staker.key(),UnstakeError::OnlyNFTOwner);
+        require!(
+            self.asset.owner == self.staker.key(),
+            UnstakeError::OnlyNFTOwner
+        );
         let cpi_accounts = TransferChecked {
             from: self.staking_vault_ata.to_account_info(),
             to: self.staker_token_ata.to_account_info(),
@@ -83,7 +86,7 @@ impl<'info> UnStake<'info> {
         let provider = self.staking_vault.provider.key();
         let seeds = &[
             b"staking_vault",
-            provider.as_ref(),  
+            provider.as_ref(),
             &[self.staking_vault.bump],
         ];
         let signer = &[&seeds[..]];
@@ -94,7 +97,7 @@ impl<'info> UnStake<'info> {
 }
 
 #[error_code]
-pub enum UnstakeError{
-  #[msg("Only owner of the NFT can Unstake")]
-  OnlyNFTOwner
+pub enum UnstakeError {
+    #[msg("Only owner of the NFT can Unstake")]
+    OnlyNFTOwner,
 }

@@ -7,7 +7,8 @@
 
 ### NFT Program
 - [x] T1: Implement initialize instruction
-- [ ] T2: Implement create collection instruction
+- [x] T2: Implement create collection instruction
+- [ ] T2: Implement mint asset instruction
 - [ ] T3: Implement list_position
 - [ ] T4: Implement delist_position
 - [ ] T5: Implement burn position
@@ -45,13 +46,16 @@
 ## 🟨 In Progress - Capital Program
 
 ## 🟨 In Progress - NFT Program
+- [ ] T2: Implement create collection instruction
+- [ ] T3: Implement mint asset instruction
 
 
-## 🟩 Done
-- [ ] T1: Implement Program initialization
+## 🟩 Done - Capital Program
+- [x] T1: Implement Program initialization
 
-## 🟩 Done
-- [ ] T1: Implement initialize instruction
+## 🟩 Done - Nft Program
+- [x] T1: Implement initialize instruction
+- [x] T2: Implement vault initialization
 
 ---
 # 🧩 Epics & Tasks Mapping
@@ -94,46 +98,5 @@
 - T11 — update_position instruction utils
 - T25 — event logging for all key flows
 
-
----
-
-# 📅 Roadmap
-
-## Phase 1 — Capital Formation & Position NFTs
-- [ ] Vault initialization (T1)
-- [ ] Deposit capital & mint position NFT (T4, T5)
-- [ ] Early withdrawal (T6)
-- [ ] List/delist positions (T2, T3)
-
-## Phase 2 — Rewards System
-- [ ] Reward deposit (T13)
-- [ ] Reward calculation utilities (T12)
-- [ ] Reward claims (T14)
-
-## Phase 3 — Position Management
-- [ ] Position state tracking (T3)
-- [ ] Update position after transfer (T8)
-- [ ] Burn position NFT (T9)
-
-## Phase 4 — Slashing & Dispute Resolution
-- [ ] Raise slash request (T16)
-- [ ] Submit slash proof (T17)
-- [ ] Execute slash (T18)
-- [ ] Resolve dispute without slash (T19)
-
-## Phase 5 — Vault Lifecycle & Redemption
-- [ ] Halt vault (T15)
-- [ ] Withdraw principal (T20)
-- [ ] Admin pause/resume vault (T22, T23)
-- [ ] Admin rescue tokens (T21)
-
-## Phase 6 — Infrastructure & Safety
-- [ ] Instruction utilities & helpers (T10, T11)
-- [ ] Comprehensive error codes (T24)
-- [ ] Event logging (T25)
-- [ ] Testing & audits  
-
-## Phase 6 — Testing 
-- [ ] Full integration tests  
 
 ---

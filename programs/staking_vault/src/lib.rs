@@ -2,9 +2,10 @@ use anchor_lang::prelude::*;
 
 declare_id!("DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ");
 
+pub mod errors;
 pub mod instructions;
 pub mod state;
-pub mod errors;
+pub mod constants;
 
 use instructions::*;
 
@@ -12,13 +13,10 @@ use instructions::*;
 pub mod staking_vault {
     use super::*;
 
-    pub fn open(ctx: Context<Open>, config: InitConfig) -> Result<()> {
-        let deposit = &config.initial_deposit.clone();
+    pub fn open(ctx: Context<CreateVault>, config: InitConfig) -> Result<()> {
+        ctx.accounts.validate_config(&config)?;
         ctx.accounts.init_config(config, ctx.bumps)?;
-        ctx.accounts.mint_asset()?;
-        if *deposit > 0 {
-            ctx.accounts.deposit_rewards()?
-        };
+        ctx.accounts.create_collection()?;
         Ok(())
     }
 

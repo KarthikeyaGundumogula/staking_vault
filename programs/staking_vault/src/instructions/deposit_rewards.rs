@@ -1,4 +1,4 @@
-use crate::state::StakingVault;
+use crate::state::Vault;
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
@@ -13,7 +13,7 @@ pub struct DepositRewards<'info> {
       seeds = [b"staking_vault",staking_vault.provider.key().as_ref()],
       bump = staking_vault.bump
     )]
-    pub staking_vault: Account<'info, StakingVault>,
+    pub staking_vault: Account<'info, Vault>,
     #[account(mint::token_program = token_program)]
     pub reward_token_mint: InterfaceAccount<'info, Mint>,
     #[account(
