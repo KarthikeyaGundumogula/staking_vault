@@ -6,7 +6,7 @@
 ## 🟦 To Do
 
 ### NFT Program
-- [ ] T1: Implement initialize instruction
+- [x] T1: Implement initialize instruction
 - [ ] T2: Implement create collection instruction
 - [ ] T3: Implement list_position
 - [ ] T4: Implement delist_position
@@ -14,7 +14,7 @@
 - [ ] T6: Implement update authorities instruction
 
 ### Capital Program
-- [✅ ] T1: Implement Program initialization
+- [x] T1: Implement Program initialization
 - [ ] T2: Implement vault initialization
 - [ ] T3: Implement create collection cpi 
 - [ ] T4: Implement PositionState initialization
