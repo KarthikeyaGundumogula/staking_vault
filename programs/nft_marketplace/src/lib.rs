@@ -12,6 +12,11 @@ pub mod nft_marketplace {
 
     use super::*;
 
+    pub fn initialize_program(ctx:Context<InitNFTProgram>,capital_program:Pubkey) -> Result<()>{
+        ctx.accounts.initialize(ctx.bumps,capital_program)?;
+        Ok(())
+    }
+
     pub fn create_core_asset(ctx: Context<CreateAsset>, args: CreateAssetArgs) -> Result<()> {
         ctx.accounts.create_asset(args)?;
         Ok(())

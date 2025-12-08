@@ -58,8 +58,8 @@ impl<'info> Open<'info> {
             rewards_value: config.initial_deposit,
             staked_value: 0,
             staking_mint: self.staking_token_mint.key(),
-            reward_mint: self.reward_token_mint.key(),
-            nft_mint: self.asset.key(),
+                reward_mint: self.reward_token_mint.key(),
+                nft_mint: self.asset.key(),
             bump: bumps.staking_vault,
             minimum_amount: config.min_amount,
             maximum_amount: config.max_amount,
@@ -120,10 +120,4 @@ pub struct InitConfig {
     pub max_amount: u64,
     pub initial_deposit: u64,
     pub staker: Pubkey,
-}
-
-#[error_code]
-pub enum StakingError {
-    #[msg("Minting CPI failed")]
-    CPIFail,
 }

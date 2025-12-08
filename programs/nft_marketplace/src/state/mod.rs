@@ -7,9 +7,12 @@ pub struct Vault {
     pub bump: u8,
 }
 
+
 #[account]
 #[derive(InitSpace)]
-pub struct Marketplace{
-    pub staking_program: Pubkey,
-    pub bump:u8
+pub struct Config{
+  pub capital_program: Pubkey,
+  pub authority:Pubkey,
+  pub admin:Pubkey,
+  pub bump:u8
 }

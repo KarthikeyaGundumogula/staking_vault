@@ -1,5 +1,11 @@
 use anchor_lang::prelude::*;
+
+use nft_marketplace::cpi::accounts::InitNFTProgram;
 use nft_marketplace::program::NftMarketplace;
+use nft_marketplace::state::Config as NftCfg;
+
+use crate::errors::InitError;
+use crate::state::Config;
 
 #[derive(Accounts)]
 pub struct InitProgram<'info> {
@@ -11,20 +17,11 @@ pub struct InitProgram<'info> {
     bump
   )]
     pub config: Account<'info, Config>,
+    pub nft_config: Account<'info, NftCfg>,
     #[account(mut)]
     pub admin: Signer<'info>,
     pub nft_program: Program<'info, NftMarketplace>,
     pub system_program: Program<'info, System>,
-}
-
-#[account]
-#[derive(InitSpace)]
-pub struct Config {
-    pub nft_program: Pubkey,
-    pub admin: Pubkey,
-    pub agent: Pubkey,
-    pub early_unlock_fee: u64, // in bps to the base 10_000
-    pub bump: u8,
 }
 
 impl<'info> InitProgram<'info> {
@@ -44,7 +41,21 @@ impl<'info> InitProgram<'info> {
         Ok(())
     }
 
-    pub fn update_authorities() -> Result<()> {
-      Ok(())
+    pub fn init_nft_program(&mut self, program_id: Pubkey) -> Result<()> {
+        let init_nft_accounts = InitNFTProgram {
+            admin: self.admin.to_account_info(),
+            authority: self.config.to_account_info(),
+            config: self.nft_config.to_account_info(),
+            system_program: self.system_program.to_account_info(),
+        };
+        let signer_seeds: &[&[&[u8]]] = &[&[b"Config", &[self.config.bump]]];
+        let nft_init_ctx = CpiContext::new_with_signer(
+            self.nft_program.to_account_info(),
+            init_nft_accounts,
+            signer_seeds,
+        );
+        nft_marketplace::cpi::initialize_program(nft_init_ctx, program_id)
+            .map_err(|_| error!(InitError::CPIFail))?;
+        Ok(())
     }
 }

@@ -15,3 +15,14 @@ pub struct StakingVault {
     pub rewards_value: u64,
     pub staked_value: u64,
 }
+
+
+#[account]
+#[derive(InitSpace)]
+pub struct Config {
+    pub nft_program: Pubkey,
+    pub admin: Pubkey,
+    pub agent: Pubkey,
+    pub early_unlock_fee: u64, // in bps to the base 10_000
+    pub bump: u8,
+}
