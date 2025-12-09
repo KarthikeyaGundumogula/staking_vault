@@ -11,6 +11,7 @@ use instructions::*;
 
 #[program]
 pub mod capital_program {
+
     use super::*;
 
     pub fn init_program(ctx: Context<InitProgram>, params: InitProgramConfig) -> Result<()> {
@@ -26,9 +27,17 @@ pub mod capital_program {
         Ok(())
     }
 
-    // pub fn stake(ctx: Context<Stake>, amount: u64) -> Result<()> {
-    //     ctx.accounts.stake_tokens(amount)
-    // }
+    pub fn open_position(ctx: Context<OpenPosition>, amount: u64) -> Result<()> {
+        ctx.accounts.init_position(amount, ctx.bumps)?;
+        ctx.accounts.transfer_funds(amount)?;
+        ctx.accounts.mint_asset()?;
+        Ok(())
+    }
+
+    pub fn update_position(ctx: Context<UpdatePosition>, amount: i64) -> Result<()> {
+        ctx.accounts.validate_and_update(amount)?;
+        Ok(())
+    }
 
     // pub fn unstake(ctx: Context<UnStake>) -> Result<()> {
     //     // let staking_vault = &ctx.accounts.staking_vault;
@@ -48,11 +57,6 @@ pub mod capital_program {
     // }
 
     // pub fn deposit_rewards(ctx: Context<DepositRewards>, amount: u64) -> Result<()> {
-    //     ctx.accounts.deposit_rewards(amount)?;
-    //     Ok(())
-    // }
-
-    // pub fn increment_stake(ctx: Context<IncrementStake>, amount: u64) -> Result<()> {
     //     ctx.accounts.deposit_rewards(amount)?;
     //     Ok(())
     // }

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use mpl_core::instructions::CreateCollectionV1CpiBuilder;
+use mpl_core::{instructions::CreateCollectionV1CpiBuilder, ID as MPL_CORE_ID};
 
 use crate::state::NFTConfig;
 
@@ -17,6 +17,7 @@ pub struct CreateVaultCollection<'info> {
     pub config: Account<'info, NFTConfig>,
     #[account(mut)]
     pub payer: Signer<'info>,
+    #[account(address = MPL_CORE_ID)]
     /// CHECK: this will be checked by the mpl-core program
     pub mpl_core_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,

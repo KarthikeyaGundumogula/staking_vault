@@ -1,4 +1,4 @@
-use crate::state::{Vault,Config};
+use crate::state::{Vault,AuthorityConfig};
 use crate::errors::CreateVaultError;
 use crate::constants::*;
 use nft_program::program::NftProgram;
@@ -18,7 +18,7 @@ pub struct CreateVault<'info> {
     #[account(
       init,
       payer = provider,
-      seeds = [b"staking_vault",provider.key().as_ref()],
+      seeds = [b"Vault",provider.key().as_ref()],
       space = Vault::INIT_SPACE + 8,
       bump 
     )]
@@ -27,7 +27,7 @@ pub struct CreateVault<'info> {
         seeds = [b"Config"],
         bump = config.bump
     )]
-    pub config: Account<'info,Config>,
+    pub config: Account<'info,AuthorityConfig>,
     pub nft_config: Account<'info,NFTConfig>,
     #[account(mint::token_program = token_program)]
     pub reward_token_mint: InterfaceAccount<'info, Mint>,
@@ -59,6 +59,7 @@ impl<'info> CreateVault<'info> {
             reward_token_mint:self.reward_token_mint.key(),
             min_cap:config.min_cap,
             max_cap:config.max_cap,
+            min_lock_amount: config.min_lock_amount,
             total_capital_collected: 0,
             total_rewards_deposited:0,
             beneficiaries:config.beneficiaries, // TODO: Update this to optional value 
@@ -94,39 +95,13 @@ impl<'info> CreateVault<'info> {
         nft_program::cpi::create_vault_collection(create_collection_ctx).map_err(|_| error!(CreateVaultError::CPIFail))?;
         Ok(())
     }
-
-    // pub fn mint_asset(&mut self) -> Result<()> {
-    //     // let mint_asset_accounts = CreateAsset {
-    //     //     asset: self.asset.to_account_info(),
-    //     //     payer: self.provider.to_account_info(),
-    //     //     owner: Some(self.staking_vault.to_account_info()),
-    //     //     system_program: self.system_program.to_account_info(),
-    //     //     mpl_core_program: self.mpl_core_program.to_account_info(),
-    //     //     collection:self.collection,
-    //     // };
-
-    //     // let mint_cpi = CpiContext::new(
-    //     //     self.nft_marketplace.to_account_info(),
-    //     //     mint_asset_accounts
-    //     // );
-
-    //     // let args = CreateAssetArgs {
-    //     //     name: String::from("Vault NFT"),
-    //     //     uri: String::from("MINT_URI"),
-    //     // };
-
-    //     // // call the CPI — now the staking_vault PDA will correctly be treated as a 'signer'
-    //     // nft_marketplace::cpi::create_core_asset(mint_cpi, args)
-    //     //     .map_err(|_| error!(StakingError::CPIFail))?;
-
-    //     Ok(())
-    // }
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub struct InitVaultConfig {
     pub min_cap: u64,
     pub max_cap: u64,
+    pub min_lock_amount: u64,
     pub beneficiaries: Vec<Pubkey>,
     pub beneficiary_shares_bps: Vec<u16>,
     pub investor_bps: u16,

@@ -8,25 +8,23 @@
 ### NFT Program
 - [x] T1: Implement initialize instruction
 - [x] T2: Implement create collection instruction
-- [ ] T2: Implement mint asset instruction
-- [ ] T3: Implement list_position
-- [ ] T4: Implement delist_position
-- [ ] T5: Implement burn position
-- [ ] T6: Implement update authorities instruction
+- [x] T3: Implement mint asset instruction
+- [x] T4: Implement burn position
+- [ ] T5: Implement list_position
+- [ ] T6: Implement delist_position
+- [ ] T7: Implement buy_position
+- [ ] T8: Implement update authorities instruction
 
 ### Capital Program
 - [x] T1: Implement Program initialization
 - [x] T2: Implement vault initialization
 - [x] T3: Implement create collection cpi
-- [ ] T4: Implement PositionState initialization
-- [ ] T5: Implement deposit_capital 
-- [ ] T6: Implement mint position nft cpi
-- [ ] T7: Implement withdraw_capital_early
-- [ ] T8: Implement burn position nft cpi
-- [ ] T9: Implement update_position_after_transfer
+- [x] T4: Implement PositionState initialization
+- [x] T5: Implement deposit_capital 
+- [x] T6: Implement mint position nft cpi
+- [x] T7: Implement withdraw_capital_early
+- [x] T9: Implement update_position_after_transfer
 - [ ] T10: Implement burn_position_nft cpi
-- [ ] T11: Implement update_vault instruction utils
-- [ ] T12: Implement update_position instruction utils
 - [ ] T13: Implement calc_reward_utils
 - [ ] T14: Implement deposit_rewards
 - [ ] T15: Implement claim_rewards
@@ -44,20 +42,26 @@
 
 
 ## 🟨 In Progress - Capital Program
-- [ ] T4: Implement PositionState initialization
+- [ ] T10: Implement burn_position_nft cpi
 
 ## 🟨 In Progress - NFT Program
-- [ ] T3: Implement mint asset instruction
 
 
 ## 🟩 Done - Capital Program
 - [x] T1: Implement Program initialization
 - [x] T2: Implement vault initialization
-- [x] T3: Implement create collection cpi 
+- [x] T3: Implement create collection cpi
+- [x] T4: Implement PositionState initialization
+- [x] T5: Implement deposit_capital 
+- [x] T6: Implement mint position nft cpi
+- [x] T7: Implement withdraw_capital_early
+- [x] T9: Implement update_position_after_transfer
 
 ## 🟩 Done - Nft Program
 - [x] T1: Implement initialize instruction
 - [x] T2: Implement create collection instruction
+- [x] T3: Implement mint asset instruction
+- [x] T4: Implement burn position
 
 ---
 # 🧩 Epics & Tasks Mapping
@@ -102,3 +106,4 @@
 
 
 ---
+

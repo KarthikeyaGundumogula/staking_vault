@@ -5,7 +5,7 @@ use nft_program::program::NftProgram;
 use nft_program::state::NFTConfig;
 
 use crate::errors::InitError;
-use crate::state::Config;
+use crate::state::AuthorityConfig;
 
 #[derive(Accounts)]
 pub struct InitProgram<'info> {
@@ -13,10 +13,10 @@ pub struct InitProgram<'info> {
     init,
     payer = admin,
     seeds = [b"Config"],
-    space = Config::INIT_SPACE,
+    space = AuthorityConfig::INIT_SPACE,
     bump,
   )]
-    pub config: Account<'info, Config>,
+    pub config: Account<'info, AuthorityConfig>,
     pub nft_config: Account<'info, NFTConfig>,
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -26,7 +26,7 @@ pub struct InitProgram<'info> {
 
 impl<'info> InitProgram<'info> {
     pub fn init(&mut self, params: InitProgramConfig, bumps: InitProgramBumps) -> Result<()> {
-        self.config.set_inner(Config {
+        self.config.set_inner(AuthorityConfig {
             nft_program: *self.nft_program.key,
             admin: *self.admin.key,
             agent: params.agent,
