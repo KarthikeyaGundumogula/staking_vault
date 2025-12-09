@@ -1,4 +1,4 @@
-use crate::state::Config;
+use crate::state::NFTConfig;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -8,9 +8,9 @@ pub struct InitNFTProgram<'info> {
     seeds = [b"nft_config"],
     bump,
     payer = admin,
-    space = Config::INIT_SPACE
+    space = NFTConfig::INIT_SPACE
   )]
-    pub config: Account<'info, Config>,
+    pub config: Account<'info, NFTConfig>,
     #[account(mut)]
     pub admin: Signer<'info>,
     pub authority: Signer<'info>,
@@ -19,7 +19,7 @@ pub struct InitNFTProgram<'info> {
 
 impl<'info> InitNFTProgram<'info> {
     pub fn initialize(&mut self, bumps: InitNFTProgramBumps,capital_program:Pubkey) -> Result<()> {
-        self.config.set_inner(Config {
+        self.config.set_inner(NFTConfig {
             capital_program: capital_program,
             authority: *self.authority.key,
             admin: *self.admin.key,

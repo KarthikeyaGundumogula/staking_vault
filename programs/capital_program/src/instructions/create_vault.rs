@@ -1,9 +1,9 @@
 use crate::state::{Vault,Config};
 use crate::errors::CreateVaultError;
 use crate::constants::*;
-use nft_marketplace::program::NftMarketplace;
-use nft_marketplace::cpi::accounts::CreateVaultCollection;
-use nft_marketplace::state::Config as NftConfig;
+use nft_program::program::NftProgram;
+use nft_program::cpi::accounts::CreateVaultCollection;
+use nft_program::state::NFTConfig;
 
 use anchor_lang::prelude::*;
 use anchor_spl::{
@@ -28,7 +28,7 @@ pub struct CreateVault<'info> {
         bump = config.bump
     )]
     pub config: Account<'info,Config>,
-    pub nft_config: Account<'info,NftConfig>,
+    pub nft_config: Account<'info,NFTConfig>,
     #[account(mint::token_program = token_program)]
     pub reward_token_mint: InterfaceAccount<'info, Mint>,
     pub staking_token_mint: InterfaceAccount<'info, Mint>,
@@ -38,12 +38,12 @@ pub struct CreateVault<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     /// CHECK: this account will be checked my the mpl_core_program
     pub mpl_core_program: UncheckedAccount<'info>,
-    pub nft_marketplace: Program<'info, NftMarketplace>,
+    pub nft_marketplace: Program<'info, NftProgram>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> CreateVault<'info> {
-    pub fn validate_params(&self,config:&InitConfig) -> Result<()> {
+    pub fn validate_params(&self,config:&InitVaultConfig) -> Result<()> {
         let total_bps: u16 = config.beneficiary_shares_bps.iter().sum::<u16>() + config.investor_bps;
         require!(total_bps <= BASE_BPS,CreateVaultError::InvalidConfig);
         require!(config.lock_phase_duration > MIN_LOCK_PERIOD,CreateVaultError::InvalidConfig);
@@ -53,7 +53,7 @@ impl<'info> CreateVault<'info> {
         Ok(())
     }
 
-    pub fn init_config(&mut self, config: InitConfig, bumps: CreateVaultBumps) -> Result<()> {
+    pub fn init_config(&mut self, config: InitVaultConfig, bumps: CreateVaultBumps) -> Result<()> {
         self.staking_vault.set_inner(Vault{
             locking_token_mint: self.staking_token_mint.key(),
             reward_token_mint:self.reward_token_mint.key(),
@@ -91,7 +91,7 @@ impl<'info> CreateVault<'info> {
         let signer_seeds: &[&[&[u8]]] = &[&[b"Config", &[self.config.bump]]];
 
         let create_collection_ctx = CpiContext::new_with_signer(self.nft_marketplace.to_account_info(), create_collection_accounts, signer_seeds);
-        nft_marketplace::cpi::create_vault_collection(create_collection_ctx).map_err(|_| error!(CreateVaultError::CPIFail))?;
+        nft_program::cpi::create_vault_collection(create_collection_ctx).map_err(|_| error!(CreateVaultError::CPIFail))?;
         Ok(())
     }
 
@@ -124,7 +124,7 @@ impl<'info> CreateVault<'info> {
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize)]
-pub struct InitConfig {
+pub struct InitVaultConfig {
     pub min_cap: u64,
     pub max_cap: u64,
     pub beneficiaries: Vec<Pubkey>,

@@ -6,8 +6,8 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-nft_marketplace = "3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh"
-staking_vault = "DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ"
+nft_program = "3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh"
+capital_program = "DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ"
 
 [registry]
 url = "https://api.apr.dev"

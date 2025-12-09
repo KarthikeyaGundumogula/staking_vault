@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use mpl_core::instructions::CreateCollectionV1CpiBuilder;
 
-use crate::state::Config;
+use crate::state::NFTConfig;
 
 #[derive(Accounts)]
 pub struct CreateVaultCollection<'info> {
@@ -14,7 +14,7 @@ pub struct CreateVaultCollection<'info> {
        seeds = [b"nft_config"],
        bump = config.bump
     )]
-    pub config: Account<'info, Config>,
+    pub config: Account<'info, NFTConfig>,
     #[account(mut)]
     pub payer: Signer<'info>,
     /// CHECK: this will be checked by the mpl-core program

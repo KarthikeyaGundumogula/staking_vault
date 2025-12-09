@@ -16,8 +16,8 @@
 
 ### Capital Program
 - [x] T1: Implement Program initialization
-- [ ] T2: Implement vault initialization
-- [ ] T3: Implement create collection cpi 
+- [x] T2: Implement vault initialization
+- [x] T3: Implement create collection cpi
 - [ ] T4: Implement PositionState initialization
 - [ ] T5: Implement deposit_capital 
 - [ ] T6: Implement mint position nft cpi
@@ -44,18 +44,20 @@
 
 
 ## 🟨 In Progress - Capital Program
+- [ ] T4: Implement PositionState initialization
 
 ## 🟨 In Progress - NFT Program
-- [ ] T2: Implement create collection instruction
 - [ ] T3: Implement mint asset instruction
 
 
 ## 🟩 Done - Capital Program
 - [x] T1: Implement Program initialization
+- [x] T2: Implement vault initialization
+- [x] T3: Implement create collection cpi 
 
 ## 🟩 Done - Nft Program
 - [x] T1: Implement initialize instruction
-- [x] T2: Implement vault initialization
+- [x] T2: Implement create collection instruction
 
 ---
 # 🧩 Epics & Tasks Mapping

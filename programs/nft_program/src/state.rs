@@ -10,7 +10,7 @@ pub struct Vault {
 
 #[account]
 #[derive(InitSpace)]
-pub struct Config{
+pub struct NFTConfig{
   pub capital_program: Pubkey,
   pub authority:Pubkey,
   pub admin:Pubkey,

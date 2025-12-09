@@ -9,7 +9,7 @@ pub mod errors;
 use instructions::*;
 
 #[program]
-pub mod nft_marketplace {
+pub mod nft_program {
 
     use super::*;
 
