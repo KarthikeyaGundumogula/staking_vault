@@ -1,242 +1,109 @@
-## **📍 DePIN Staking Vaults — Powered by Delegated Stake & Tokenized Positions**
-
-This project enables a **staking marketplace on top of DePIN networks**, where real-world infrastructure providers (charging stations, mobility nodes, hotspots, etc.) must stake tokens to operate and earn rewards.
-
-This protocol lets **regular users delegate stake**, allowing providers to scale while stakers earn yield. Each position is represented as a transferable **NFT (similar to UniV3 LP NFTs)**.
+# 🏗️ CAPITAL LAYER PROTOCOL — PROJECT TRACKER
 
 ---
 
-## **🌍 Why This Exists**
+# 📌 Kanban Board
+## 🟦 To Do
 
-DePIN operators need capital to stake before operating. This protocol unlocks liquidity sources by pairing capital providers with infrastructure operators.
+### NFT Program
+- [x] T1: Implement initialize instruction
+- [x] T2: Implement create collection instruction
+- [x] T3: Implement mint asset instruction
+- [x] T4: Implement burn position
+- [ ] T5: Implement list_position
+- [ ] T6: Implement delist_position
+- [ ] T7: Implement buy_position
+- [ ] T8: Implement update authorities instruction
 
-| Role          | Benefit                                |
-| ------------- | -------------------------------------- |
-| **Stakers**   | Earn yield without running hardware    |
-| **Providers** | Scale operations using delegated stake |
-| **Traders**   | Enter or exit yield positions via NFTs |
+### Capital Program
+- [x] T1: Implement Program initialization
+- [x] T2: Implement vault initialization
+- [x] T3: Implement create collection cpi
+- [x] T4: Implement PositionState initialization
+- [x] T5: Implement deposit_capital 
+- [x] T6: Implement mint position nft cpi
+- [x] T7: Implement withdraw_capital_early
+- [x] T9: Implement update_position_after_transfer
+- [x] T14: Implement deposit_rewards
+- [x] T15: Implement claim_rewards
+- [ ] T17: Implement raise_slash_request
+- [ ] T18: Implement submit_slash_proof
+- [ ] T19: Implement execute_slash
+- [ ] T20: Implement resolve_dispute_without_slash
+- [ ] T21: Implement withdraw_principal
+- [ ] T22: Implement admin_rescue_tokens
+- [ ] T23: Implement admin_pause_vault
+- [ ] T24: Implement admin_resume_vault
+- [ ] T25: Add comprehensive Anchor error codes
+- [ ] T26: Event logging for all key flows
+
+
+## 🟨 In Progress - Capital Program
+- [ ] T25: Add comprehensive Anchor error codes
+- [ ] T26: Event logging for all key flows
+
+## 🟨 In Progress - NFT Program
+
+
+## 🟩 Done - Capital Program
+- [x] T1: Implement Program initialization
+- [x] T2: Implement vault initialization
+- [x] T3: Implement create collection cpi
+- [x] T4: Implement PositionState initialization
+- [x] T5: Implement deposit_capital 
+- [x] T6: Implement mint position nft cpi
+- [x] T7: Implement withdraw_capital_early
+- [x] T9: Implement update_position_after_transfer
+- [x] T14: Implement deposit_rewards
+- [x] T15: Implement claim_rewards
+
+## 🟩 Done - Nft Program
+- [x] T1: Implement initialize instruction
+- [x] T2: Implement create collection instruction
+- [x] T3: Implement mint asset instruction
+- [x] T4: Implement burn position
+
+---
+# 🧩 Epics & Tasks Mapping
+
+## EPIC 1 — Capital Formation
+- T1 — Vault initialization
+- T4 — deposit_capital
+- T6 — withdraw_capital_early
+
+## EPIC 2 — Position NFTs
+- T2 — list_position
+- T3 — delist_position
+- T5 — mint position nft cpi
+- T8 — update_position_after_transfer
+- T9 — burn_position_nft cpi
+
+## EPIC 3 — Rewards
+- T12 — calc_reward_utils
+- T13 — deposit_rewards
+- T14 — claim_rewards
+
+## EPIC 4 — Slashing & Dispute
+- T16 — raise_slash_request
+- T17 — submit_slash_proof
+- T18 — execute_slash
+- T19 — resolve_dispute_without_slash
+
+## EPIC 5 — Vault Lifecycle / Redemption
+- T15 — halt_vault instruction
+- T20 — withdraw_principal
+
+## EPIC 6 — Admin & Safety
+- T21 — admin_rescue_tokens
+- T22 — admin_pause_vault
+- T23 — admin_resume_vault
+- T24 — add comprehensive Anchor error codes
+
+## EPIC 7 — Infrastructure & Testing
+- T10 — update_vault instruction utils
+- T11 — update_position instruction utils
+- T25 — event logging for all key flows
+
 
 ---
 
-## **🔑 Core Concepts**
-
-### **📌 Staking Vaults**
-
-* One provider ↔ one staker
-* Provider deposits rewards manually over time
-* NFT represents vault ownership
-* Closed only when balances are zero
-* NFT burned on close
-
-### **📌 Position NFTs**
-
-* Minted on vault open
-* Transferred on marketplace
-* Represent rights to withdraw stake & rewards
-
-### **📌 Marketplace Program**
-
-* Escrow deposit + claim flows
-* Trading positions without interacting with vault
-* No staking logic inside marketplace
-
----
-
-## **⚙️ Programs Overview**
-
-| Program                     | Purpose                                                  | Program ID                                     |
-| --------------------------- | -------------------------------------------------------- | ---------------------------------------------- |
-| **Staking Vault Program**   | Manages staking, withdrawals, rewards, and NFT lifecycle | `DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ` |
-| **NFT Marketplace Program** | Manages position transfers & escrow                      | `3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh` |
-
----
-
-## **🧑‍🤝‍🧑 User Stories**
-
-### **<span style="color: rgb(255,165,0)">🧑‍💼 Provider Stories</span>**
-
-* **Given** a new vault configuration
-  **When** I open a vault with a staker
-  **Then** delegated stake can be used to scale my DePIN operations.
-
-* **Given** rewards are earned off-chain
-  **When** I deposit rewards into the vault
-  **Then** the staker receives claimable returns.
-
----
-
-### **<span style="color: rgb(0,180,255)">💰 Staker Stories</span>**
-
-* **Given** a provider-bound vault
-  **When** I stake tokens
-  **Then** I earn rewards without operating infrastructure.
-
-* **Given** my vault position is represented as an NFT
-  **When** I transfer or sell the NFT
-  **Then** ownership transfers without unstaking.
-
-* **Given** the staking duration has ended
-  **When** I withdraw
-  **Then** I receive principal + rewards.
-
----
-
-### **<span style="color: rgb(140,255,0)">📈 Trader Stories</span>**
-
-* **Given** NFTs represent vault ownership
-  **When** I buy one in the marketplace
-  **Then** I inherit withdrawal rights.
-
-* **Given** NFTs are transferable
-  **When** ownership changes hands
-  **Then** staking and rewards remain unaffected.
-
----
-
-### **<span style="color: rgb(255,0,200)">🛠 Protocol / Developer Stories</span>**
-
-* **Given** staking logic lives in the vault program
-  **When** NFTs are traded
-  **Then** the staking state remains secure.
-
-* **Given** a vault holds balances
-  **When** all balances reach zero
-  **Then** the vault can be closed and NFT burned.
-
----
-
-## **🪙 Token & Reward Model**
-
-| Detail        | Rule                         |
-| ------------- | ---------------------------- |
-| Reward source | Manual deposits by provider  |
-| Recipient     | 100% to NFT Owner            |
-| Token types   | Determined by DePIN network  |
-| Exit method   | Withdraw + burn NFT on close |
-
-> No automated emissions. Vaults are isolated agreements.
-
----
-
-## **🧩 Design Principles**
-
-* NFT = ownership layer, not collateral
-* Vault burns on close
-* Inspired by Uniswap V3 architecture
-* Marketplace does not affect staking logic
-* Future: store metadata on NFT using MPL attributes
-
----
-## **🏗️ Architecture Overview**
-
-### **High-Level System Design**
-
-![Simple User Flow](/diagrams/simple-arch.png)
-
-### **Technical Design**
-
-![Simple User Flow](/diagrams/arch-technical.png)
-
-## **⚡ Installation & Quick Start (Local Only)**
-
-> **The protocol is still under active development.
-> Currently only local validation and testing are supported.**
-> Both Anchor tests and Gill scripts are available depending on your workflow.
-
----
-
-### **📍 Prerequisites**
-
-Make sure you have:
-
-* **Node.js + Yarn**
-* **Rust + Solana CLI**
-* **Anchor Framework**
-* **Gill CLI (optional)**
-
-To install dependencies and build the programs:
-
-```sh
-yarn && anchor build
-```
-
----
-
-### **🧪 Running Anchor Tests**
-
-For full program-level tests:
-
-```sh
-anchor test
-```
-
-> This runs against Anchor’s built-in test validator and executes everything end-to-end.
-
----
-
-### **🧰 Running via Gill Scripts**
-
-Gill scripts simulate real-world interaction flows and are useful for non-Solana devs or testers who don’t want to write Rust/Anchor code.
-
-#### **Step 1️⃣ Start Local Validator (with MPL-Core preloaded)**
-
-A custom script spins up a localnet with required programs already included:
-
-```sh
-anchor run localnet
-```
-
-> Leave this terminal running—it acts as the blockchain node.
-
----
-
-#### **Step 2️⃣ Deploy Programs (in a new terminal)**
-
-```sh
-anchor deploy
-```
-
----
-
-#### **Step 3️⃣ Open a Vault**
-
-Runs the script located at:
-
-```
-scripts/open-vault.ts
-```
-
-Execute:
-
-```sh
-anchor run open
-```
----
-
-#### **Step 4️⃣ Stake to the Vault**
-Runs the script located at:
-
-```
-scripts/stake.ts
-```
-
-Execute:
-
-```sh
-anchor run stake
-```
-
----
-
-
-## **🔜 Roadmap**
-
-| Feature                        | Status         |
-| ------------------------------ | -------------- |
-| On-NFT attribute storage       | Research phase |
-| Multi-staker aggregated vaults | Planned        |
-| Slashing with aggr vaults      | Planned        |
-| Automated reward indexing      | Planned        |
-| Cross-chain DePIN integrations | Long-term      |
-
----
