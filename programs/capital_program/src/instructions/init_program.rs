@@ -92,7 +92,6 @@ impl<'info> InitProgram<'info> {
         params: InitProgramConfig,
         bumps: &InitProgramBumps,
     ) -> Result<()> {
-
         self.config.set_inner(AuthorityConfig {
             // Program references
             nft_program: self.nft_program.key(),
@@ -160,17 +159,4 @@ pub struct InitProgramConfig {
     pub min_lock_duration: i64,
 }
 
-/// Event emitted when program is initialized
-#[event]
-pub struct ProgramInitializedEvent {
-    pub config: Pubkey,
-    pub admin: Pubkey,
-    pub agent: Pubkey,
-    pub nft_program: Pubkey,
-    pub capital_program: Pubkey,
-    pub early_unlock_fee: u64,
-    pub dispute_window: i64,
-    pub min_lock_duration: i64,
-    pub max_lock_duration: i64,
-    pub timestamp: i64,
-}
+

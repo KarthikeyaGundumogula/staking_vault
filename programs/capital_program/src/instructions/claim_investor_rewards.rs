@@ -167,12 +167,3 @@ impl<'info> ClaimInvestorRewards<'info> {
     }
 }
 
-// Event for indexing and monitoring
-#[event]
-pub struct RewardsClaimedEvent {
-    pub holder: Pubkey,
-    pub vault: Pubkey,
-    pub position: Pubkey,
-    pub amount: u64,
-    pub timestamp: i64,
-}

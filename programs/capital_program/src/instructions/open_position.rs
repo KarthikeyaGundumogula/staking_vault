@@ -110,11 +110,7 @@ impl<'info> OpenPosition<'info> {
         );
 
         // Validate amount is positive
-        require_gt!(
-            amount,
-            0,
-            PositionError::AmountMustBePositive
-        );
+        require_gt!(amount, 0, PositionError::AmountMustBePositive);
 
         // Calculate new total after deposit
         let new_total = self
@@ -182,10 +178,7 @@ impl<'info> OpenPosition<'info> {
             mint: self.locked_token_mint.to_account_info(),
         };
 
-        let cpi_ctx = CpiContext::new(
-            self.token_program.to_account_info(),
-            transfer_accounts,
-        );
+        let cpi_ctx = CpiContext::new(self.token_program.to_account_info(), transfer_accounts);
 
         transfer_checked(cpi_ctx, amount, self.locked_token_mint.decimals)?;
 
@@ -194,10 +187,7 @@ impl<'info> OpenPosition<'info> {
 
     /// Mints the NFT asset representing this position
     pub fn mint_position_nft(&self) -> Result<()> {
-        let signer_seeds: &[&[&[u8]]] = &[&[
-            b"Config",
-            &[self.config.bump],
-        ]];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"Config", &[self.config.bump]]];
 
         let cpi_accounts = CreateAsset {
             asset: self.asset.to_account_info(),
@@ -218,7 +208,10 @@ impl<'info> OpenPosition<'info> {
 
         // Create dynamic NFT metadata based on position
         let args = CreateAssetArgs {
-            name: format!("Vault Position #{}", self.position.key().to_string()[..8].to_string()),
+            name: format!(
+                "Vault Position #{}",
+                self.position.key().to_string()[..8].to_string()
+            ),
             uri: format!("https://api.vault.com/position/{}", self.position.key()),
         };
 
@@ -226,14 +219,4 @@ impl<'info> OpenPosition<'info> {
 
         Ok(())
     }
-}
-
-#[event]
-pub struct PositionOpenedEvent {
-    pub position: Pubkey,
-    pub vault: Pubkey,
-    pub capital_provider: Pubkey,
-    pub asset: Pubkey,
-    pub amount: u64,
-    pub timestamp: i64,
 }

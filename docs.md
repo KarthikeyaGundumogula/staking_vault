@@ -125,3 +125,33 @@ admin_rescue_tokens
 admin_pause_vault
 
 admin_resume_vault
+
+
+### clients
+
+```javascript
+// Creating a vault with beneficiaries
+const beneficiaries = [
+  {
+    address: beneficiary1.publicKey,
+    shareBps: 2000, // 20%
+    totalClaimed: new BN(0),
+  },
+  {
+    address: beneficiary2.publicKey,
+    shareBps: 3000, // 30%
+    totalClaimed: new BN(0),
+  },
+];
+
+await program.methods
+  .createVault({
+    minCap: new BN(1000),
+    maxCap: new BN(10000),
+    beneficiaries: beneficiaries,
+    investorBps: 5000, // 50%
+    // ... other params
+  })
+  .accounts({...})
+  .rpc();
+```

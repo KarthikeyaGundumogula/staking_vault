@@ -1,5 +1,4 @@
 use crate::{
-    constants::*,
     errors::PositionError,
     state::{AuthorityConfig, Position, Vault},
 };
@@ -108,11 +107,7 @@ impl<'info> UpdatePosition<'info> {
     /// Processes capital deposit (increase position)
     fn process_deposit(&mut self, amount: u64) -> Result<()> {
         // Validate amount is positive
-        require_gt!(
-            amount,
-            0,
-            PositionError::AmountMustBePositive
-        );
+        require_gt!(amount, 0, PositionError::AmountMustBePositive);
 
         // Calculate new position value
         let new_position_value = self
@@ -155,11 +150,7 @@ impl<'info> UpdatePosition<'info> {
     /// Processes capital withdrawal (decrease position)
     fn process_withdrawal(&mut self, amount: u64) -> Result<()> {
         // Validate amount is positive
-        require_gt!(
-            amount,
-            0,
-            PositionError::AmountMustBePositive
-        );
+        require_gt!(amount, 0, PositionError::AmountMustBePositive);
 
         // Calculate new position value
         let new_position_value = self
@@ -208,10 +199,7 @@ impl<'info> UpdatePosition<'info> {
             mint: self.locking_token_mint.to_account_info(),
         };
 
-        let cpi_ctx = CpiContext::new(
-            self.token_program.to_account_info(),
-            transfer_accounts,
-        );
+        let cpi_ctx = CpiContext::new(self.token_program.to_account_info(), transfer_accounts);
 
         transfer_checked(cpi_ctx, amount, self.locking_token_mint.decimals)?;
 
@@ -221,11 +209,8 @@ impl<'info> UpdatePosition<'info> {
     /// Transfers tokens from vault to provider
     fn transfer_from_vault(&self, amount: u64) -> Result<()> {
         let node_operator_key = self.vault.node_operator.key();
-        let signer_seeds: &[&[&[u8]]] = &[&[
-            b"Vault",
-            node_operator_key.as_ref(),
-            &[self.vault.bump],
-        ]];
+        let signer_seeds: &[&[&[u8]]] =
+            &[&[b"Vault", node_operator_key.as_ref(), &[self.vault.bump]]];
 
         let transfer_accounts = TransferChecked {
             from: self.vault_token_ata.to_account_info(),
@@ -244,14 +229,4 @@ impl<'info> UpdatePosition<'info> {
 
         Ok(())
     }
-}
-
-#[event]
-pub struct PositionUpdatedEvent {
-    pub position: Pubkey,
-    pub vault: Pubkey,
-    pub capital_provider: Pubkey,
-    pub update_amount: i64,
-    pub new_total: u64,
-    pub timestamp: i64,
 }

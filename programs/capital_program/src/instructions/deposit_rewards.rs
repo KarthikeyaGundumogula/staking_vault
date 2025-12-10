@@ -67,11 +67,7 @@ impl<'info> DepositRewards<'info> {
     /// Validates reward deposit parameters
     pub fn validate_deposit(&self, amount: u64) -> Result<()> {
         // Validate amount is positive
-        require_gt!(
-            amount,
-            0,
-            DepositRewardsError::AmountMustBePositive
-        );
+        require_gt!(amount, 0, DepositRewardsError::AmountMustBePositive);
 
         // Validate agent has sufficient balance
         require_gte!(
@@ -118,10 +114,7 @@ impl<'info> DepositRewards<'info> {
             mint: self.reward_token_mint.to_account_info(),
         };
 
-        let cpi_ctx = CpiContext::new(
-            self.token_program.to_account_info(),
-            transfer_accounts,
-        );
+        let cpi_ctx = CpiContext::new(self.token_program.to_account_info(), transfer_accounts);
 
         transfer_checked(cpi_ctx, amount, self.reward_token_mint.decimals)?;
 
@@ -129,11 +122,3 @@ impl<'info> DepositRewards<'info> {
     }
 }
 
-#[event]
-pub struct RewardsDepositedEvent {
-    pub vault: Pubkey,
-    pub agent: Pubkey,
-    pub amount: u64,
-    pub total_rewards: u64,
-    pub timestamp: i64,
-}

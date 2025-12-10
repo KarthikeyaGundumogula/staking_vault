@@ -1,6 +1,6 @@
 use crate::constants::*;
 use crate::errors::CreateVaultError;
-use crate::state::{AuthorityConfig, Vault};
+use crate::state::{AuthorityConfig, Vault,Beneficiary};
 use nft_program::cpi::accounts::CreateVaultCollection;
 use nft_program::program::NftProgram;
 use nft_program::state::NFTConfig;
@@ -61,21 +61,21 @@ pub struct CreateVault<'info> {
 
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    
+
     /// CHECK: Validated by MPL Core program during CPI
     #[account(
         executable,
         constraint = mpl_core_program.key() == mpl_core::ID @ CreateVaultError::InvalidMplCoreProgram
     )]
     pub mpl_core_program: UncheckedAccount<'info>,
-    
+
     pub nft_marketplace: Program<'info, NftProgram>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> CreateVault<'info> {
     /// Validates all configuration parameters for vault creation
-    /// 
+    ///
     /// Checks:
     /// - Total BPS allocation doesn't exceed 100%
     /// - Lock phase duration meets minimum requirements
@@ -83,11 +83,34 @@ impl<'info> CreateVault<'info> {
     /// - Timing constraints are satisfied
     /// - Beneficiary configuration is valid
     pub fn validate_config(&self, config: &InitVaultConfig) -> Result<()> {
-        // Validate basis points don't exceed 100%
-        let total_bps: u16 = config
-            .beneficiary_shares_bps
-            .iter()
-            .sum::<u16>()
+
+        // Validate no duplicate beneficiaries and calculate total BPS
+        let mut total_beneficiary_bps: u16 = 0;
+        for i in 0..config.beneficiaries.len() {
+            // Check for duplicates
+            for j in (i + 1)..config.beneficiaries.len() {
+                require_neq!(
+                    config.beneficiaries[i].address,
+                    config.beneficiaries[j].address,
+                    CreateVaultError::DuplicateBeneficiary
+                );
+            }
+            
+            // Validate individual share is reasonable
+            require_gt!(
+                config.beneficiaries[i].share_bps,
+                0,
+                CreateVaultError::BeneficiaryShareMustBePositive
+            );
+            
+            // Accumulate total
+            total_beneficiary_bps = total_beneficiary_bps
+                .checked_add(config.beneficiaries[i].share_bps)
+                .ok_or(CreateVaultError::ArithmeticOverflow)?;
+        }
+
+        // Validate total BPS doesn't exceed 100%
+        let total_bps = total_beneficiary_bps
             .checked_add(config.investor_bps)
             .ok_or(CreateVaultError::ArithmeticOverflow)?;
 
@@ -111,36 +134,13 @@ impl<'info> CreateVault<'info> {
             CreateVaultError::InvalidCapitalRange
         );
 
-        require_gt!(
-            config.min_cap,
-            0,
-            CreateVaultError::MinCapMustBePositive
-        );
+        require_gt!(config.min_cap, 0, CreateVaultError::MinCapMustBePositive);
 
         require_gt!(
             config.min_lock_amount,
             0,
             CreateVaultError::MinLockAmountMustBePositive
         );
-
-        // Validate beneficiary configuration
-        require_eq!(
-            config.beneficiaries.len(),
-            config.beneficiary_shares_bps.len(),
-            CreateVaultError::BeneficiaryMismatch
-        );
-
-
-        // Validate no duplicate beneficiaries
-        for i in 0..config.beneficiaries.len() {
-            for j in (i + 1)..config.beneficiaries.len() {
-                require_neq!(
-                    config.beneficiaries[i],
-                    config.beneficiaries[j],
-                    CreateVaultError::DuplicateBeneficiary
-                );
-            }
-        }
 
         // Validate timing constraints
         let clock = Clock::get()?;
@@ -164,43 +164,41 @@ impl<'info> CreateVault<'info> {
         config: InitVaultConfig,
         bumps: &CreateVaultBumps,
     ) -> Result<()> {
-
         self.vault.set_inner(Vault {
             // Token configuration
             locking_token_mint: self.staking_token_mint.key(),
             reward_token_mint: self.reward_token_mint.key(),
-            
+
             // Capital configuration
             min_cap: config.min_cap,
             max_cap: config.max_cap,
             min_lock_amount: config.min_lock_amount,
             total_capital_collected: 0,
             total_rewards_deposited: 0,
-            
+
             // Beneficiary configuration
             beneficiaries: config.beneficiaries,
-            beneficiary_shares_bps: config.beneficiary_shares_bps,
             investor_bps: config.investor_bps,
-            
+
             // Slash configuration
             max_slash_bps: config.max_slash_bps,
             pending_slash_amount: 0,
             slash_claimant: config.slash_claimant,
-            
+
             // NFT configuration
             nft_collection: self.nft_collection.key(),
-            
+
             // Authority configuration
             reward_distributor: config.reward_distributor,
             node_operator: config.node_operator,
-            
+
             // Timing configuration
             lock_phase_start_at: config.lock_phase_start_time,
             lock_phase_duration: config.lock_phase_duration,
-            
+
             is_dispute_active: false,
             dispute_start_time: 0,
-            
+
             // Account metadata
             bump: bumps.vault,
         });
@@ -210,10 +208,7 @@ impl<'info> CreateVault<'info> {
 
     /// Creates the NFT collection for this vault via CPI
     pub fn create_nft_collection(&self) -> Result<()> {
-        let signer_seeds: &[&[&[u8]]] = &[&[
-            b"Config",
-            &[self.config_account.bump],
-        ]];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"Config", &[self.config_account.bump]]];
 
         let cpi_accounts = CreateVaultCollection {
             collection: self.nft_collection.to_account_info(),
@@ -234,7 +229,6 @@ impl<'info> CreateVault<'info> {
 
         Ok(())
     }
-
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
@@ -243,36 +237,20 @@ pub struct InitVaultConfig {
     pub min_cap: u64,
     pub max_cap: u64,
     pub min_lock_amount: u64,
-    
+
     // Beneficiary configuration
-    pub beneficiaries: Vec<Pubkey>,
-    pub beneficiary_shares_bps: Vec<u16>,
+    pub beneficiaries: Vec<Beneficiary>,
     pub investor_bps: u16,
-    
+
     // Slash configuration
     pub max_slash_bps: u16,
     pub slash_claimant: Pubkey,
-    
+
     // Authority configuration
     pub reward_distributor: Pubkey,
     pub node_operator: Pubkey,
-    
+
     // Timing configuration
     pub lock_phase_duration: i64,
     pub lock_phase_start_time: i64,
-}
-
-// Event for indexing and monitoring
-#[event]
-pub struct VaultCreatedEvent {
-    pub vault: Pubkey,
-    pub provider: Pubkey,
-    pub node_operator: Pubkey,
-    pub staking_token: Pubkey,
-    pub reward_token: Pubkey,
-    pub nft_collection: Pubkey,
-    pub min_cap: u64,
-    pub max_cap: u64,
-    pub lock_phase_start_time: i64,
-    pub timestamp: i64,
 }

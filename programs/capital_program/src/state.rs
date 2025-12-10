@@ -26,9 +26,7 @@ pub struct Vault {
     pub total_capital_collected: u64,
 
     #[max_len(5)]
-    pub beneficiaries: Vec<Pubkey>,
-    #[max_len(5)]
-    pub beneficiary_shares_bps: Vec<u16>,
+    pub beneficiaries: Vec<Beneficiary>,
     pub investor_bps: u16,
 
     pub max_slash_bps: u16,
@@ -45,6 +43,13 @@ pub struct Vault {
     pub pending_slash_amount: u64,
     pub slash_claimant: Pubkey,
     pub bump: u8,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
+pub struct Beneficiary {
+    pub address: Pubkey,
+    pub share_bps: u16,
+    pub total_claimed: u64,
 }
 
 #[derive(InitSpace)]

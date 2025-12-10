@@ -4,20 +4,24 @@ declare_id!("DW9BXusirecGep9k5FXFDALYiY1HPtBpVWwPJ36ZD8KZ");
 
 pub mod constants;
 pub mod errors;
+pub mod events;
 pub mod instructions;
 pub mod state;
 
-use instructions::*;
 use errors::*;
+use events::*;
+use instructions::*;
 
 #[program]
 pub mod capital_program {
 
-
     use super::*;
 
-    pub fn init_program(ctx: Context<InitProgram>, params: InitProgramConfig) -> Result<()> {
-         // Step 1: Validate all parameters
+    pub fn init_program_handler(
+        ctx: Context<InitProgram>,
+        params: InitProgramConfig,
+    ) -> Result<()> {
+        // Step 1: Validate all parameters
         ctx.accounts.validate_params(&params)?;
 
         // Step 2: Initialize config account
@@ -47,8 +51,7 @@ pub mod capital_program {
         Ok(())
     }
 
-    pub fn create_vault(ctx: Context<CreateVault>, config: InitVaultConfig) -> Result<()> {
-        
+    pub fn create_vault_handler(ctx: Context<CreateVault>, config: InitVaultConfig) -> Result<()> {
         // Step 1: Validate configuration parameters
         ctx.accounts.validate_config(&config)?;
 
@@ -77,9 +80,7 @@ pub mod capital_program {
         Ok(())
     }
 
-    pub fn open_position(ctx: Context<OpenPosition>, amount: u64) -> Result<()> {
-       
-
+    pub fn open_position_handler(ctx: Context<OpenPosition>, amount: u64) -> Result<()> {
         // Step 1: Initialize position account
         ctx.accounts.initialize_position(amount, &ctx.bumps)?;
 
@@ -106,8 +107,7 @@ pub mod capital_program {
         Ok(())
     }
 
-    pub fn update_position(ctx: Context<UpdatePosition>, update_amount: i64) -> Result<()> {
-       
+    pub fn update_position_handler(ctx: Context<UpdatePosition>, update_amount: i64) -> Result<()> {
         // Process the update
         ctx.accounts.process_update(update_amount)?;
 
@@ -122,13 +122,15 @@ pub mod capital_program {
         });
 
         msg!("Position updated successfully");
-        msg!("New total locked: {}", ctx.accounts.position.total_value_locked);
+        msg!(
+            "New total locked: {}",
+            ctx.accounts.position.total_value_locked
+        );
 
         Ok(())
     }
 
-    pub fn deposit_rewards(ctx: Context<DepositRewards>, amount: u64) -> Result<()> {
-        
+    pub fn deposit_rewards_handler(ctx: Context<DepositRewards>, amount: u64) -> Result<()> {
         // Step 1: Validate deposit parameters
         ctx.accounts.validate_deposit(amount)?;
 
@@ -149,12 +151,15 @@ pub mod capital_program {
 
         msg!("Rewards deposited successfully");
         msg!("Amount: {}", amount);
-        msg!("Total rewards in vault: {}", ctx.accounts.vault.total_rewards_deposited);
+        msg!(
+            "Total rewards in vault: {}",
+            ctx.accounts.vault.total_rewards_deposited
+        );
 
         Ok(())
     }
 
-    pub fn claim_investor_rewards(ctx:Context<ClaimInvestorRewards>) -> Result<()> {
+    pub fn claim_investor_rewards_handler(ctx: Context<ClaimInvestorRewards>) -> Result<()> {
         // Calculate claimable rewards
         let claimable_amount = ctx.accounts.calculate_claimable_rewards()?;
 
@@ -177,6 +182,31 @@ pub mod capital_program {
         });
 
         msg!("Successfully claimed {} rewards", claimable_amount);
+
+        Ok(())
+    }
+
+    pub fn claim_beneficiary_rewards_handler(
+        ctx: Context<ClaimBeneficiaryRewards>,
+        beneficiary_index: u8,
+    ) -> Result<()> {
+        // Calculate claimable amount
+        let claimable = ctx.accounts.calculate_claimable(beneficiary_index)?;
+
+        require_gt!(claimable, 0, ClaimRewardsError::NoRewardsToClaim);
+
+        // Process claim
+        ctx.accounts.process_claim(beneficiary_index, claimable)?;
+
+        // Transfer rewards
+        ctx.accounts.transfer_rewards(claimable)?;
+
+        emit!(BeneficiaryRewardsClaimedEvent {
+            vault: ctx.accounts.vault.key(),
+            beneficiary: ctx.accounts.beneficiary.key(),
+            amount: claimable,
+            timestamp: Clock::get()?.unix_timestamp,
+        });
 
         Ok(())
     }

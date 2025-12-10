@@ -41,4 +41,9 @@ pub enum ClaimRewardsError {
     #[msg("Invalid calculation result")]
     InvalidCalculation,
 
+    #[msg("Given Index is out of Beneficiary")]
+    InvalidBeneficiaryIndex,
+
+    #[msg("Beneficiary not found in the Beneficary Array")]
+    UnauthorizedBeneficiary
 }

@@ -2,9 +2,6 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum CreateVaultError {
-    // ============================================================================
-    // Basis Points & Share Distribution Errors (6000-6009)
-    // ============================================================================
     #[msg("Total basis points allocation exceeds maximum (10000 BPS = 100%)")]
     BPSExceedsMaximum,
 
@@ -32,9 +29,6 @@ pub enum CreateVaultError {
     #[msg("Investor basis points must be greater than zero")]
     InvestorBPSTooLow,
 
-    // ============================================================================
-    // Capital & Amount Errors (6010-6019)
-    // ============================================================================
     #[msg("Maximum cap must be greater than minimum cap")]
     InvalidCapitalRange,
 
@@ -56,9 +50,9 @@ pub enum CreateVaultError {
     #[msg("Invalid capital configuration")]
     InvalidCapitalConfig,
 
-    // ============================================================================
-    // Timing & Duration Errors (6020-6029)
-    // ============================================================================
+    #[msg("Beneficiary shares must greater than zero")]
+    BeneficiaryShareMustBePositive,
+
     #[msg("Lock phase duration is below minimum required period")]
     LockPhaseTooShort,
 
@@ -91,6 +85,4 @@ pub enum CreateVaultError {
 
     #[msg("Arithmetic underflow occurred")]
     ArithmeticUnderflow,
-
-
 }

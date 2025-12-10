@@ -37,16 +37,16 @@ pub enum PositionError {
 
     #[msg("Invalid locking token mint")]
     InvalidLockingMint,
-    
+
     #[msg("Arithmetic overflow occurred")]
     ArithmeticOverflow,
-    
+
     #[msg("Invalid collection address")]
     InvalidCollection,
-    
+
     #[msg("Amount exceeds vault capacity")]
     AmountExceedsVaultCapacity,
-    
+
     #[msg("Invalid MPL Core program")]
     InvalidMplCoreProgram,
 
