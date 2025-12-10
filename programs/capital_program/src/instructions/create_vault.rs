@@ -1,6 +1,6 @@
 use crate::constants::*;
 use crate::errors::CreateVaultError;
-use crate::state::{AuthorityConfig, Vault,Beneficiary};
+use crate::state::{AuthorityConfig, Beneficiary, Vault};
 use nft_program::cpi::accounts::CreateVaultCollection;
 use nft_program::program::NftProgram;
 use nft_program::state::NFTConfig;
@@ -83,7 +83,6 @@ impl<'info> CreateVault<'info> {
     /// - Timing constraints are satisfied
     /// - Beneficiary configuration is valid
     pub fn validate_config(&self, config: &InitVaultConfig) -> Result<()> {
-
         // Validate no duplicate beneficiaries and calculate total BPS
         let mut total_beneficiary_bps: u16 = 0;
         for i in 0..config.beneficiaries.len() {
@@ -95,14 +94,14 @@ impl<'info> CreateVault<'info> {
                     CreateVaultError::DuplicateBeneficiary
                 );
             }
-            
+
             // Validate individual share is reasonable
             require_gt!(
                 config.beneficiaries[i].share_bps,
                 0,
                 CreateVaultError::BeneficiaryShareMustBePositive
             );
-            
+
             // Accumulate total
             total_beneficiary_bps = total_beneficiary_bps
                 .checked_add(config.beneficiaries[i].share_bps)
@@ -114,11 +113,7 @@ impl<'info> CreateVault<'info> {
             .checked_add(config.investor_bps)
             .ok_or(CreateVaultError::ArithmeticOverflow)?;
 
-        require_gte!(
-            BASE_BPS,
-            total_bps,
-            CreateVaultError::BPSExceedsMaximum
-        );
+        require_gte!(BASE_BPS, total_bps, CreateVaultError::BPSExceedsMaximum);
 
         // Validate lock phase duration
         require_gte!(

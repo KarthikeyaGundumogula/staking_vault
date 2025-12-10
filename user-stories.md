@@ -14,7 +14,9 @@
 * As a capital provider, when I try to deposit after Active phase has started, the transaction fails with "Vault Not Accepting Deposits".
 * As a capital provider, when I withdraw early in Formation phase, my capital is returned minus the fee and my Position NFT is burned.
 * As a capital provider, when I try to withdraw early after the Active phase has begun, the transaction fails with "Capital Locked".
-
+* As a capital provider, I can close my position after fundraise period if the vault didn't reach the min_cap, and withdraw my funds.
+* As a node operator, I can clsoe the vault after fundraise period if the vault didn't reach the min_cap and its ata is empty,
+  
 ---
 
 ## **Active Phase Behavior**

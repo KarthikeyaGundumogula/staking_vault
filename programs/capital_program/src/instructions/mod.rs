@@ -1,6 +1,6 @@
-pub mod approve_slash_req;
+pub mod finalize_slash_req;
 pub mod claim_investor_rewards;
-pub mod close;
+pub mod close_vault;
 pub mod close_position;
 pub mod create_slash_req;
 pub mod create_vault;
@@ -17,7 +17,8 @@ pub use init_program::*;
 pub use open_position::*;
 pub use update_position::*;
 pub use claim_beneficiary_rewards::*;
-// pub use create_slash_req::*;
+pub use create_slash_req::*;
+pub use finalize_slash_req::*;
 // pub use approve_slash_req::*;
 // pub use close_position::*;
 // pub use close::*;

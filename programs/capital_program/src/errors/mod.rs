@@ -3,7 +3,9 @@ pub mod create_vault_errors;
 pub mod deposit_rewards_errors;
 pub mod init_program_errors;
 pub mod position_error_errors;
+pub mod slashing_errors;
 
+pub use slashing_errors::*;
 pub use claim_rewards_errors::*;
 pub use create_vault_errors::*;
 pub use deposit_rewards_errors::*;
