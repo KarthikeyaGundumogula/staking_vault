@@ -1,114 +1,278 @@
-use crate::state::{Vault,AuthorityConfig};
-use crate::errors::CreateVaultError;
 use crate::constants::*;
-use nft_program::program::NftProgram;
+use crate::errors::CreateVaultError;
+use crate::state::{AuthorityConfig, Vault};
 use nft_program::cpi::accounts::CreateVaultCollection;
+use nft_program::program::NftProgram;
 use nft_program::state::NFTConfig;
 
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token_interface::{ Mint, TokenInterface},
+    token_interface::{Mint, TokenInterface},
 };
 
 #[derive(Accounts)]
+#[instruction(config: InitVaultConfig)]
 pub struct CreateVault<'info> {
+    /// The vault provider/creator who pays for account initialization
     #[account(mut)]
     pub provider: Signer<'info>,
+
+    /// The vault account to be created
     #[account(
-      init,
-      payer = provider,
-      seeds = [b"Vault",provider.key().as_ref()],
-      space = Vault::INIT_SPACE + 8,
-      bump 
+        init,
+        payer = provider,
+        seeds = [b"Vault", provider.key().as_ref()],
+        space = Vault::INIT_SPACE + 8,
+        bump,
     )]
-    pub staking_vault: Account<'info, Vault>,
+    pub vault: Account<'info, Vault>,
+
+    /// Global authority configuration
     #[account(
         seeds = [b"Config"],
-        bump = config.bump
+        bump = config_account.bump,
     )]
-    pub config: Account<'info,AuthorityConfig>,
-    pub nft_config: Account<'info,NFTConfig>,
-    #[account(mint::token_program = token_program)]
+    pub config_account: Account<'info, AuthorityConfig>,
+
+    /// NFT marketplace configuration
+    pub nft_config: Account<'info, NFTConfig>,
+
+    /// Reward token mint - tokens distributed as rewards
+    #[account(
+        mint::token_program = token_program,
+        constraint = reward_token_mint.decimals > 0 @ CreateVaultError::InvalidRewardMint
+    )]
     pub reward_token_mint: InterfaceAccount<'info, Mint>,
+
+    /// Staking/locking token mint - tokens locked by investors
+    #[account(
+        mint::token_program = token_program,
+        constraint = staking_token_mint.decimals > 0 @ CreateVaultError::InvalidStakingMint,
+    )]
     pub staking_token_mint: InterfaceAccount<'info, Mint>,
-    #[account(mut)]
+
+    /// NFT collection for vault positions
+    #[account(
+        mut,
+        constraint = nft_collection.lamports() == 0 @ CreateVaultError::CollectionAlreadyExists
+    )]
     pub nft_collection: Signer<'info>,
+
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    /// CHECK: this account will be checked my the mpl_core_program
+    
+    /// CHECK: Validated by MPL Core program during CPI
+    #[account(
+        executable,
+        constraint = mpl_core_program.key() == mpl_core::ID @ CreateVaultError::InvalidMplCoreProgram
+    )]
     pub mpl_core_program: UncheckedAccount<'info>,
+    
     pub nft_marketplace: Program<'info, NftProgram>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> CreateVault<'info> {
-    pub fn validate_params(&self,config:&InitVaultConfig) -> Result<()> {
-        let total_bps: u16 = config.beneficiary_shares_bps.iter().sum::<u16>() + config.investor_bps;
-        require!(total_bps <= BASE_BPS,CreateVaultError::InvalidConfig);
-        require!(config.lock_phase_duration > MIN_LOCK_PERIOD,CreateVaultError::InvalidConfig);
-        require!(config.min_cap>config.max_cap,CreateVaultError::InvalidConfig);
+    /// Validates all configuration parameters for vault creation
+    /// 
+    /// Checks:
+    /// - Total BPS allocation doesn't exceed 100%
+    /// - Lock phase duration meets minimum requirements
+    /// - Capital caps are properly ordered
+    /// - Timing constraints are satisfied
+    /// - Beneficiary configuration is valid
+    pub fn validate_config(&self, config: &InitVaultConfig) -> Result<()> {
+        // Validate basis points don't exceed 100%
+        let total_bps: u16 = config
+            .beneficiary_shares_bps
+            .iter()
+            .sum::<u16>()
+            .checked_add(config.investor_bps)
+            .ok_or(CreateVaultError::ArithmeticOverflow)?;
+
+        require_gte!(
+            BASE_BPS,
+            total_bps,
+            CreateVaultError::BPSExceedsMaximum
+        );
+
+        // Validate lock phase duration
+        require_gte!(
+            config.lock_phase_duration,
+            MIN_LOCK_PERIOD,
+            CreateVaultError::LockPhaseTooShort
+        );
+
+        // Validate capital caps (max should be greater than min)
+        require_gt!(
+            config.max_cap,
+            config.min_cap,
+            CreateVaultError::InvalidCapitalRange
+        );
+
+        require_gt!(
+            config.min_cap,
+            0,
+            CreateVaultError::MinCapMustBePositive
+        );
+
+        require_gt!(
+            config.min_lock_amount,
+            0,
+            CreateVaultError::MinLockAmountMustBePositive
+        );
+
+        // Validate beneficiary configuration
+        require_eq!(
+            config.beneficiaries.len(),
+            config.beneficiary_shares_bps.len(),
+            CreateVaultError::BeneficiaryMismatch
+        );
+
+
+        // Validate no duplicate beneficiaries
+        for i in 0..config.beneficiaries.len() {
+            for j in (i + 1)..config.beneficiaries.len() {
+                require_neq!(
+                    config.beneficiaries[i],
+                    config.beneficiaries[j],
+                    CreateVaultError::DuplicateBeneficiary
+                );
+            }
+        }
+
+        // Validate timing constraints
         let clock = Clock::get()?;
-        require!(clock.unix_timestamp+MIN_FUND_RAISE_DURATION < config.lock_phase_start_time,CreateVaultError::TooEarlyToLock);
+        let earliest_lock_time = clock
+            .unix_timestamp
+            .checked_add(MIN_FUND_RAISE_DURATION)
+            .ok_or(CreateVaultError::ArithmeticOverflow)?;
+
+        require_gte!(
+            config.lock_phase_start_time,
+            earliest_lock_time,
+            CreateVaultError::LockPhaseStartsTooSoon
+        );
+
         Ok(())
     }
 
-    pub fn init_config(&mut self, config: InitVaultConfig, bumps: CreateVaultBumps) -> Result<()> {
-        self.staking_vault.set_inner(Vault{
+    /// Initializes the vault account with provided configuration
+    pub fn initialize_vault(
+        &mut self,
+        config: InitVaultConfig,
+        bumps: &CreateVaultBumps,
+    ) -> Result<()> {
+
+        self.vault.set_inner(Vault {
+            // Token configuration
             locking_token_mint: self.staking_token_mint.key(),
-            reward_token_mint:self.reward_token_mint.key(),
-            min_cap:config.min_cap,
-            max_cap:config.max_cap,
+            reward_token_mint: self.reward_token_mint.key(),
+            
+            // Capital configuration
+            min_cap: config.min_cap,
+            max_cap: config.max_cap,
             min_lock_amount: config.min_lock_amount,
             total_capital_collected: 0,
-            total_rewards_deposited:0,
-            beneficiaries:config.beneficiaries, // TODO: Update this to optional value 
-            beneficiary_shares_bps:config.beneficiary_shares_bps, // TODO: Update this to optional value 
-            investor_bps:config.investor_bps,
-            max_slash_bps:config.max_slash_bps,
-            nft_collection:self.nft_collection.key(),
-            reward_distributor:self.provider.key(), // TODO: update this to Optional value if none then the provider is the reward_distributor
-            node_operator:*self.provider.key,
-            lock_phase_start_at:config.lock_phase_start_time,
-            lock_phase_duration:config.lock_phase_duration,
-            is_dispute_active:false,
-            dispute_start_time:0,
-            pending_slash_amount:0,
-            slash_claimant:*self.provider.key, // TODO: update this to agent 
-            bump:bumps.staking_vault
+            total_rewards_deposited: 0,
+            
+            // Beneficiary configuration
+            beneficiaries: config.beneficiaries,
+            beneficiary_shares_bps: config.beneficiary_shares_bps,
+            investor_bps: config.investor_bps,
+            
+            // Slash configuration
+            max_slash_bps: config.max_slash_bps,
+            pending_slash_amount: 0,
+            slash_claimant: config.slash_claimant,
+            
+            // NFT configuration
+            nft_collection: self.nft_collection.key(),
+            
+            // Authority configuration
+            reward_distributor: config.reward_distributor,
+            node_operator: config.node_operator,
+            
+            // Timing configuration
+            lock_phase_start_at: config.lock_phase_start_time,
+            lock_phase_duration: config.lock_phase_duration,
+            
+            is_dispute_active: false,
+            dispute_start_time: 0,
+            
+            // Account metadata
+            bump: bumps.vault,
         });
+
         Ok(())
     }
 
-    pub fn create_collection(&mut self) -> Result<()>{
-        let create_collection_accounts = CreateVaultCollection{
-            collection:self.nft_collection.to_account_info(),
-            update_authority: self.config.to_account_info(),
-            config:self.nft_config.to_account_info(),
-            payer:self.provider.to_account_info(),
-            mpl_core_program:self.mpl_core_program.to_account_info(),
-            system_program:self.system_program.to_account_info()
+    /// Creates the NFT collection for this vault via CPI
+    pub fn create_nft_collection(&self) -> Result<()> {
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            b"Config",
+            &[self.config_account.bump],
+        ]];
+
+        let cpi_accounts = CreateVaultCollection {
+            collection: self.nft_collection.to_account_info(),
+            update_authority: self.config_account.to_account_info(),
+            config: self.nft_config.to_account_info(),
+            payer: self.provider.to_account_info(),
+            mpl_core_program: self.mpl_core_program.to_account_info(),
+            system_program: self.system_program.to_account_info(),
         };
-        let signer_seeds: &[&[&[u8]]] = &[&[b"Config", &[self.config.bump]]];
 
-        let create_collection_ctx = CpiContext::new_with_signer(self.nft_marketplace.to_account_info(), create_collection_accounts, signer_seeds);
-        nft_program::cpi::create_vault_collection(create_collection_ctx).map_err(|_| error!(CreateVaultError::CPIFail))?;
+        let cpi_ctx = CpiContext::new_with_signer(
+            self.nft_marketplace.to_account_info(),
+            cpi_accounts,
+            signer_seeds,
+        );
+
+        nft_program::cpi::create_vault_collection(cpi_ctx)?;
+
         Ok(())
     }
+
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct InitVaultConfig {
+    // Capital configuration
     pub min_cap: u64,
     pub max_cap: u64,
     pub min_lock_amount: u64,
+    
+    // Beneficiary configuration
     pub beneficiaries: Vec<Pubkey>,
     pub beneficiary_shares_bps: Vec<u16>,
     pub investor_bps: u16,
+    
+    // Slash configuration
     pub max_slash_bps: u16,
+    pub slash_claimant: Pubkey,
+    
+    // Authority configuration
     pub reward_distributor: Pubkey,
     pub node_operator: Pubkey,
+    
+    // Timing configuration
     pub lock_phase_duration: i64,
     pub lock_phase_start_time: i64,
-    pub slash_claimant: Pubkey,
+}
+
+// Event for indexing and monitoring
+#[event]
+pub struct VaultCreatedEvent {
+    pub vault: Pubkey,
+    pub provider: Pubkey,
+    pub node_operator: Pubkey,
+    pub staking_token: Pubkey,
+    pub reward_token: Pubkey,
+    pub nft_collection: Pubkey,
+    pub min_cap: u64,
+    pub max_cap: u64,
+    pub lock_phase_start_time: i64,
+    pub timestamp: i64,
 }

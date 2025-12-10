@@ -35,7 +35,6 @@ pub struct CreateAsset<'info> {
 
 impl<'info> CreateAsset<'info> {
     pub fn create_asset(&mut self, args: CreateAssetArgs) -> Result<()> {
-        
         CreateV2CpiBuilder::new(&self.mpl_core_program.to_account_info())
             .asset(&self.asset.to_account_info())
             .collection(Some(&self.collection.to_account_info()))

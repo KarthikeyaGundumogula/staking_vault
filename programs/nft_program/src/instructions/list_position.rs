@@ -8,7 +8,7 @@ pub struct DepositAsset<'info> {
     #[account(mut)]
     pub asset: AccountInfo<'info>,
     /// CHECK: This account is provided by the payer
-    pub receiver:AccountInfo<'info>,
+    pub receiver: AccountInfo<'info>,
     #[account(
         init,
         payer = payer,
@@ -32,7 +32,7 @@ impl<'info> DepositAsset<'info> {
     pub fn deposit(&mut self, bumps: DepositAssetBumps) -> Result<()> {
         self.vault.bump = bumps.vault;
         self.vault.receiver = *self.receiver.key;
-        
+
         TransferV1CpiBuilder::new(&self.mpl_core_program.to_account_info())
             .asset(&self.asset.to_account_info())
             .collection(None)

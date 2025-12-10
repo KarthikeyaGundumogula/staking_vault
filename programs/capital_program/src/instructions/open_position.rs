@@ -14,96 +14,192 @@ use nft_program::state::NFTConfig;
 
 #[derive(Accounts)]
 pub struct OpenPosition<'info> {
+    /// The capital provider who is opening the position
     #[account(mut)]
     pub capital_provider: Signer<'info>,
+
+    /// The NFT asset representing this position
+    #[account(mut)]
     pub asset: Signer<'info>,
-    /// CHECK: this will be checked by the mpl-core program
-    pub vault_collection: UncheckedAccount<'info>,
+
+    /// The vault's NFT collection
+    /// CHECK: Validated by MPL Core program during CPI
     #[account(
-      seeds = [b"Vault",vault.node_operator.key().as_ref()],
-      bump = vault.bump,
+        constraint = vault_collection.key() == vault.nft_collection @ PositionError::InvalidCollection
+    )]
+    pub vault_collection: UncheckedAccount<'info>,
+
+    /// The vault where capital will be locked
+    #[account(
+        mut,
+        seeds = [b"Vault", vault.node_operator.key().as_ref()],
+        bump = vault.bump,
+        constraint = !vault.is_dispute_active @ PositionError::VaultUnderDispute
     )]
     pub vault: Account<'info, Vault>,
+
+    /// Global configuration account
     #[account(
         seeds = [b"Config"],
         bump = config.bump
     )]
     pub config: Account<'info, AuthorityConfig>,
+
+    /// NFT Program configuration
     pub nft_config: Account<'info, NFTConfig>,
+
+    /// Position account tracking the investment
     #[account(
-      init,
-      payer = capital_provider,
-      space= Position::INIT_SPACE,
-      seeds = [b"Position",asset.key().as_ref()],
-      bump,
+        init,
+        payer = capital_provider,
+        space = Position::INIT_SPACE + 8,
+        seeds = [b"Position", asset.key().as_ref()],
+        bump,
     )]
     pub position: Account<'info, Position>,
+
+    /// Capital provider's token account
     #[account(
-      mut,
-      associated_token::mint = locked_token_mint,
-      associated_token::authority = capital_provider,
-      associated_token::token_program = token_program
+        mut,
+        associated_token::mint = locked_token_mint,
+        associated_token::authority = capital_provider,
+        associated_token::token_program = token_program,
+        constraint = capital_provider_token_ata.amount >= vault.min_lock_amount @ PositionError::InsufficientBalance
     )]
     pub capital_provider_token_ata: InterfaceAccount<'info, TokenAccount>,
+
+    /// Vault's token account
     #[account(
-      init_if_needed,
-      payer = capital_provider,
-      associated_token::mint = locked_token_mint,
-      associated_token::authority = vault,
-      associated_token::token_program = token_program
+        init_if_needed,
+        payer = capital_provider,
+        associated_token::mint = locked_token_mint,
+        associated_token::authority = vault,
+        associated_token::token_program = token_program
     )]
     pub vault_ata: InterfaceAccount<'info, TokenAccount>,
+
+    /// The token mint for locked capital
+    #[account(
+        mint::token_program = token_program,
+        address = vault.locking_token_mint @ PositionError::InvalidLockingMint
+    )]
     pub locked_token_mint: InterfaceAccount<'info, Mint>,
+
     pub token_program: Interface<'info, TokenInterface>,
-    /// CHECK: this will be checked at nft program
+
+    /// CHECK: Validated by NFT program during CPI
+    #[account(
+        executable,
+        constraint = mpl_core_program.key() == mpl_core::ID @ PositionError::InvalidMplCoreProgram
+    )]
     pub mpl_core_program: UncheckedAccount<'info>,
+
     pub nft_program: Program<'info, NftProgram>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> OpenPosition<'info> {
-    fn validate(&mut self, amount: u64) -> Result<()> {
-        require!(
-            amount >= self.vault.min_lock_amount,
-            PositionError::AmountTooLow
+    /// Validates position opening parameters
+    fn validate_position(&self, amount: u64) -> Result<()> {
+        // Validate amount meets minimum
+        require_gte!(
+            amount,
+            self.vault.min_lock_amount,
+            PositionError::AmountBelowMinimum
         );
+
+        // Validate amount is positive
+        require_gt!(
+            amount,
+            0,
+            PositionError::AmountMustBePositive
+        );
+
+        // Calculate new total after deposit
+        let new_total = self
+            .vault
+            .total_capital_collected
+            .checked_add(amount)
+            .ok_or(PositionError::ArithmeticOverflow)?;
+
+        // Validate vault capacity with detailed error
+        if new_total > self.vault.max_cap {
+            // Check if partial deposit is possible
+            let remaining_capacity = self
+                .vault
+                .max_cap
+                .checked_sub(self.vault.total_capital_collected)
+                .ok_or(PositionError::ArithmeticUnderflow)?;
+
+            require!(
+                remaining_capacity >= self.vault.min_lock_amount,
+                PositionError::VaultMaxCapReached
+            );
+
+            return err!(PositionError::AmountExceedsVaultCapacity);
+        }
+
+        // Validate timing constraints
+        let clock = Clock::get()?;
         require!(
-            self.vault.total_capital_collected + amount < self.vault.max_cap,
-            PositionError::VaultMaxCapReached
-        ); // TODO: allow partial deposits if the partial deposit is greater than the min_amount
+            clock.unix_timestamp < self.vault.lock_phase_start_at,
+            PositionError::LockPhaseAlreadyStarted
+        );
+
         Ok(())
     }
-    pub fn init_position(&mut self, amount: u64, bumps: OpenPositionBumps) -> Result<()> {
-        self.validate(amount)?;
+
+    /// Initializes the position account
+    pub fn initialize_position(&mut self, amount: u64, bumps: &OpenPositionBumps) -> Result<()> {
+        self.validate_position(amount)?;
+
         self.position.set_inner(Position {
             vault: self.vault.key(),
             total_value_locked: amount,
             total_rewards_claimed: 0,
-            is_listed: false,
+            asset: self.asset.key(),
             bump: bumps.position,
         });
+
         Ok(())
     }
-    pub fn transfer_funds(&mut self, amount: u64) -> Result<()> {
-        let transfer_staking_token_accounts = TransferChecked {
-            from: self.capital_provider_token_ata.to_account_info(),
-            to: self.vault_ata.to_account_info(),
-            authority: self.capital_provider.to_account_info(),
-            mint: self.locked_token_mint.to_account_info(),
-        };
-        let token_program = self.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new(token_program, transfer_staking_token_accounts);
+
+    /// Transfers capital from provider to vault
+    pub fn transfer_capital(&mut self, amount: u64) -> Result<()> {
+        // Update vault state first (checks before effects pattern)
         self.vault.total_capital_collected = self
             .vault
             .total_capital_collected
             .checked_add(amount)
             .ok_or(PositionError::ArithmeticOverflow)?;
+
+        // Perform the transfer
+        let transfer_accounts = TransferChecked {
+            from: self.capital_provider_token_ata.to_account_info(),
+            to: self.vault_ata.to_account_info(),
+            authority: self.capital_provider.to_account_info(),
+            mint: self.locked_token_mint.to_account_info(),
+        };
+
+        let cpi_ctx = CpiContext::new(
+            self.token_program.to_account_info(),
+            transfer_accounts,
+        );
+
         transfer_checked(cpi_ctx, amount, self.locked_token_mint.decimals)?;
+
         Ok(())
     }
-    pub fn mint_asset(&mut self) -> Result<()> {
-        let mint_asset_accounts = CreateAsset {
+
+    /// Mints the NFT asset representing this position
+    pub fn mint_position_nft(&self) -> Result<()> {
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            b"Config",
+            &[self.config.bump],
+        ]];
+
+        let cpi_accounts = CreateAsset {
             asset: self.asset.to_account_info(),
             payer: self.capital_provider.to_account_info(),
             owner: self.capital_provider.to_account_info(),
@@ -113,21 +209,31 @@ impl<'info> OpenPosition<'info> {
             config: self.nft_config.to_account_info(),
             collection_update_authority: self.config.to_account_info(),
         };
-        let signer_seeds: &[&[&[u8]]] = &[&[b"Config", &[self.config.bump]]];
-        let mint_cpi = CpiContext::new_with_signer(
+
+        let cpi_ctx = CpiContext::new_with_signer(
             self.nft_program.to_account_info(),
-            mint_asset_accounts,
+            cpi_accounts,
             signer_seeds,
         );
 
+        // Create dynamic NFT metadata based on position
         let args = CreateAssetArgs {
-            name: String::from("Vault NFT"),
-            uri: String::from("MINT_URI"),
+            name: format!("Vault Position #{}", self.position.key().to_string()[..8].to_string()),
+            uri: format!("https://api.vault.com/position/{}", self.position.key()),
         };
 
-        nft_program::cpi::create_core_asset(mint_cpi, args)
-            .map_err(|_| error!(PositionError::CPIFail))?;
+        nft_program::cpi::create_core_asset(cpi_ctx, args)?;
 
         Ok(())
     }
+}
+
+#[event]
+pub struct PositionOpenedEvent {
+    pub position: Pubkey,
+    pub vault: Pubkey,
+    pub capital_provider: Pubkey,
+    pub asset: Pubkey,
+    pub amount: u64,
+    pub timestamp: i64,
 }

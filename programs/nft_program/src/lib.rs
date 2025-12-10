@@ -2,9 +2,9 @@
 use anchor_lang::prelude::*;
 declare_id!("3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh");
 
+pub mod errors;
 pub mod instructions;
 pub mod state;
-pub mod errors;
 
 use instructions::*;
 
@@ -13,12 +13,12 @@ pub mod nft_program {
 
     use super::*;
 
-    pub fn initialize_program(ctx:Context<InitNFTProgram>,capital_program:Pubkey) -> Result<()>{
-        ctx.accounts.initialize(ctx.bumps,capital_program)?;
+    pub fn initialize_program(ctx: Context<InitNFTProgram>, capital_program: Pubkey) -> Result<()> {
+        ctx.accounts.initialize(ctx.bumps, capital_program)?;
         Ok(())
     }
 
-    pub fn create_vault_collection(ctx:Context<CreateVaultCollection>) -> Result<()> {
+    pub fn create_vault_collection(ctx: Context<CreateVaultCollection>) -> Result<()> {
         ctx.accounts.create_collection()?;
         Ok(())
     }

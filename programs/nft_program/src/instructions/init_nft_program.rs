@@ -18,7 +18,11 @@ pub struct InitNFTProgram<'info> {
 }
 
 impl<'info> InitNFTProgram<'info> {
-    pub fn initialize(&mut self, bumps: InitNFTProgramBumps,capital_program:Pubkey) -> Result<()> {
+    pub fn initialize(
+        &mut self,
+        bumps: InitNFTProgramBumps,
+        capital_program: Pubkey,
+    ) -> Result<()> {
         self.config.set_inner(NFTConfig {
             capital_program: capital_program,
             authority: *self.authority.key,

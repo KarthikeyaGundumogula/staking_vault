@@ -51,8 +51,8 @@ pub struct Vault {
 #[account]
 pub struct Position {
     pub vault: Pubkey,
+    pub asset: Pubkey,
     pub total_value_locked: u64,
     pub total_rewards_claimed: u64,
-    pub is_listed: bool,
-    pub bump:u8
+    pub bump: u8,
 }
