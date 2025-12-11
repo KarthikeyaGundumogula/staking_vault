@@ -164,7 +164,7 @@ pub mod capital_program {
         let claimable_amount = ctx.accounts.calculate_claimable_rewards()?;
 
         // Ensure there are rewards to claim
-        require_gt!(claimable_amount, 0, RewardsError::NoRewardsToClaim);
+        require_gt!(claimable_amount, 0, PositionError::NoRewardsToClaim);
 
         // Update position state
         ctx.accounts.process_claim(claimable_amount)?;
@@ -193,7 +193,7 @@ pub mod capital_program {
         // Calculate claimable amount
         let claimable = ctx.accounts.calculate_claimable(beneficiary_index)?;
 
-        require_gt!(claimable, 0, RewardsError::NoRewardsToClaim);
+        require_gt!(claimable, 0, PositionError::NoRewardsToClaim);
 
         // Process claim
         ctx.accounts.process_claim(beneficiary_index, claimable)?;
@@ -211,40 +211,62 @@ pub mod capital_program {
         Ok(())
     }
 
-    // pub fn unstake(ctx: Context<UnStake>) -> Result<()> {
-    //     // let staking_vault = &ctx.accounts.staking_vault;
-    //     // let clock = Clock::get()?;
-    //     // let elapsed_time = clock.unix_timestamp as u64 - staking_vault.start_time;
-    //     // require!(
-    //     //     elapsed_time >= staking_vault.duration,
-    //     //     StakingVaultError::StakingPeriodNotCompleted
-    //     // );
-    //     let staked_amount = ctx.accounts.staking_vault_ata.amount;
-    //     ctx.accounts.transfer_staked_tokens(staked_amount)?;
-    //     let reward_amount = &ctx.accounts.vault_reward_ata.amount;
-    //     if *reward_amount > 0 {
-    //         ctx.accounts.transfer_rewards(*reward_amount)?;
-    //     }
-    //     Ok(())
-    // }
+    pub fn create_slas_req_handler(
+        ctx: Context<CreateSlashReq>,
+        slash_bps: u16,
+        slash_claimant: Pubkey,
+    ) -> Result<()> {
+        ctx.accounts.create_slas_req(slash_bps, slash_claimant)?;
+        emit!(SlashRequestCreatedEvent {
+            vault: ctx.accounts.vault.key(),
+            agent: ctx.accounts.agent.key(),
+            slash_claimant,
+            slash_bps,
+            dispute_start_time: ctx.accounts.vault.dispute_start_time,
+            timestamp: Clock::get()?.unix_timestamp,
+        });
 
-    // pub fn close_vault(ctx: Context<Close>) -> Result<()> {
-    //     let vault_reward_balance = ctx.accounts.vault_rewards_ata.amount;
-    //     let vault_staked_balance = ctx.accounts.vault_staking_ata.amount;
-    //     require!(
-    //         vault_reward_balance == vault_staked_balance && vault_reward_balance == 0,
-    //         StakingVaultError::VaultNotEmpty
-    //     );
-    //     ctx.accounts.close_vault_accounts()?;
-    //     ctx.accounts.burn_nft()?;
-    //     Ok(())
-    // }
-}
+        msg!("Slash request created successfully");
+        msg!("Slash BPS: {}", slash_bps);
+        msg!("Claimant: {}", slash_claimant);
+        Ok(())
+    }
+    pub fn finalize_slash_req_handler(
+        ctx: Context<FinalizeSlashReq>,
+        decision: bool,
+        amount: u64,
+    ) -> Result<()> {
+        ctx.accounts.process_req(decision, amount)?;
+        msg!("Slash request finalized successfully");
+        msg!("Decision: {}", decision);
+        msg!("Amount: {}", amount);
+        emit!(SlashReqFinalizedEvent {
+            claimant: ctx.accounts.vault.slash_claimant,
+            vault: ctx.accounts.vault.key(),
+            amount,
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+        Ok(())
+    }
 
-#[error_code]
-pub enum StakingVaultError {
-    #[msg("The staking period not completed yet")]
-    StakingPeriodNotCompleted,
-    #[msg("Vault still holds tokens unstake first")]
-    VaultNotEmpty,
+    pub fn close_position_handler(ctx: Context<ClosePosition>) -> Result<()> {
+        ctx.accounts.process_transfers()?;
+        ctx.accounts.burn_nft()?;
+        msg!("Position closed successfully");
+        emit!(PositionClosedEvent {
+            holder: ctx.accounts.position_holder.key(),
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+        Ok(())
+    }
+
+    pub fn close_vault_handler(ctx: Context<CloseVault>) -> Result<()> {
+        ctx.accounts.close_vault_accounts()?;
+        msg!("Vault closed successfully");
+        emit!(VaultClosedEvent {
+            node_operator: ctx.accounts.node_operator.key(),
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+        Ok(())
+    }
 }

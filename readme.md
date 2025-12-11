@@ -23,24 +23,26 @@
 - [x] T5: Implement deposit_capital 
 - [x] T6: Implement mint position nft cpi
 - [x] T7: Implement withdraw_capital_early
-- [x] T9: Implement update_position_after_transfer
-- [x] T14: Implement deposit_rewards
-- [x] T15: Implement claim_rewards
-- [x] T17: Implement raise_slash_request
-- [x] T18: Implement submit_slash_proof
-- [x] T19: Implement execute_slash
-- [x] T20: Implement resolve_dispute_without_slash
-- [x] T21: Implement withdraw_principal
-- [x] T23: Implement close_vault
-- [ ] T25: Add comprehensive Anchor error codes
-- [ ] T26: Event logging for all key flows
+- [x] T8: Implement update_position_after_transfer
+- [x] T9: Implement deposit_rewards
+- [x] T10: Implement claim_rewards
+- [x] T11: Implement raise_slash_request
+- [x] T12: Implement submit_slash_proof
+- [x] T13: Implement execute_slash
+- [x] T14: Implement resolve_dispute_without_slash
+- [x] T15: Implement withdraw_principal
+- [x] T16: Implement close_vault
+- [x] T17: Add comprehensive Anchor error codes
+- [x] T18: Event logging for all key flows
 
 
 ## 🟨 In Progress - Capital Program
-- [ ] T25: Add comprehensive Anchor error codes
-- [ ] T26: Event logging for all key flows
 
 ## 🟨 In Progress - NFT Program
+- [ ] T5: Implement list_position
+- [ ] T6: Implement delist_position
+- [ ] T7: Implement buy_position
+- [ ] T8: Implement update authorities instruction
 
 
 ## 🟩 Done - Capital Program
@@ -51,15 +53,17 @@
 - [x] T5: Implement deposit_capital 
 - [x] T6: Implement mint position nft cpi
 - [x] T7: Implement withdraw_capital_early
-- [x] T9: Implement update_position_after_transfer
-- [x] T14: Implement deposit_rewards
-- [x] T15: Implement claim_rewards
-- [x] T17: Implement raise_slash_request
-- [x] T18: Implement submit_slash_proof
-- [x] T19: Implement execute_slash
-- [x] T20: Implement resolve_dispute_without_slash
-- [x] T21: Implement withdraw_principal
-- [x] T23: Implement close_vault
+- [x] T8: Implement update_position_after_transfer
+- [x] T9: Implement deposit_rewards
+- [x] T10: Implement claim_rewards
+- [x] T11: Implement raise_slash_request
+- [x] T12: Implement submit_slash_proof
+- [x] T13: Implement execute_slash
+- [x] T14: Implement resolve_dispute_without_slash
+- [x] T15: Implement withdraw_principal
+- [x] T16: Implement close_vault
+- [x] T17: Add comprehensive Anchor error codes
+- [x] T18: Event logging for all key flows
 
 ## 🟩 Done - Nft Program
 - [x] T1: Implement initialize instruction

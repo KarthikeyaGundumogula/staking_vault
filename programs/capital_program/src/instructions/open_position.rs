@@ -88,9 +88,7 @@ pub struct OpenPosition<'info> {
     pub token_program: Interface<'info, TokenInterface>,
 
     /// CHECK: Validated by NFT program during CPI
-    #[account(
-        executable,
-    )]
+    #[account(executable)]
     pub mpl_core_program: UncheckedAccount<'info>,
 
     pub nft_program: Program<'info, NftProgram>,
@@ -105,18 +103,18 @@ impl<'info> OpenPosition<'info> {
         require_gte!(
             amount,
             self.vault.min_lock_amount,
-            VaultError::Min
+            VaultError::BelowMinLockCap
         );
 
         // Validate amount is positive
-        require_gt!(amount, 0, PositionError::AmountMustBePositive);
+        require_gt!(amount, 0, ArithmeticError::AmountMustBePositive);
 
         // Calculate new total after deposit
         let new_total = self
             .vault
             .total_capital_collected
             .checked_add(amount)
-            .ok_or(PositionError::ArithmeticOverflow)?;
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
         // Validate vault capacity with detailed error
         if new_total > self.vault.max_cap {
@@ -125,21 +123,21 @@ impl<'info> OpenPosition<'info> {
                 .vault
                 .max_cap
                 .checked_sub(self.vault.total_capital_collected)
-                .ok_or(PositionError::ArithmeticUnderflow)?;
+                .ok_or(ArithmeticError::ArithmeticUnderflow)?;
 
             require!(
                 remaining_capacity >= self.vault.min_lock_amount,
-                PositionError::VaultMaxCapReached
+                VaultError::VaultMaxCapReached
             );
 
-            return err!(PositionError::AmountExceedsVaultCapacity);
+            return err!(VaultError::VaultMaxCapReached);
         }
 
         // Validate timing constraints
         let clock = Clock::get()?;
         require!(
             clock.unix_timestamp < self.vault.lock_phase_start_at,
-            PositionError::LockPhaseAlreadyStarted
+            PhaseError::LockPhaseAlreadyStarted
         );
 
         Ok(())
@@ -167,8 +165,8 @@ impl<'info> OpenPosition<'info> {
             .vault
             .total_capital_collected
             .checked_add(amount)
-            .ok_or(PositionError::ArithmeticOverflow)?;
-        // Deposits only allowed before Locking and the slashing happens after locking 
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
+        // Deposits only allowed before Locking and the slashing happens after locking
         self.vault.capital_after_slashing = self.vault.total_capital_collected;
 
         // Perform the transfer

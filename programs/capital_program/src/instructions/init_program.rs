@@ -51,11 +51,7 @@ impl<'info> InitProgram<'info> {
     /// - Agent address is valid
     pub fn validate_params(&self, params: &InitProgramConfig) -> Result<()> {
         // Validate agent address
-        require_keys_neq!(
-            params.agent,
-            Pubkey::default(),
-            SignerError::InvalidAddress
-        );
+        require_keys_neq!(params.agent, Pubkey::default(), SignerError::InvalidAddress);
 
         // Validate reasonable duration range
         let duration_range = params
@@ -142,5 +138,3 @@ pub struct InitProgramConfig {
     /// Minimum allowed lock duration (in seconds)
     pub min_lock_duration: i64,
 }
-
-

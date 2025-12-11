@@ -5,7 +5,7 @@ use anchor_spl::{
     token_interface::{close_account, CloseAccount, Mint, TokenAccount, TokenInterface},
 };
 #[derive(Accounts)]
-pub struct Close<'info> {
+pub struct CloseVault<'info> {
     /// CHECK: checked address of the provider
     #[account( address = vault.node_operator)]
     pub node_operator: Signer<'info>,
@@ -41,11 +41,15 @@ pub struct Close<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> Close<'info> {
-        pub fn close_vault_accounts(&mut self) -> Result<()> {
-          let clock = Clock::get()?;
-          require!(clock.unix_timestamp
-                    > self.vault.lock_phase_start_at + self.vault.lock_phase_duration,
+impl<'info> CloseVault<'info> {
+    pub fn close_vault_accounts(&mut self) -> Result<()> {
+        let clock = Clock::get()?;
+        let lock_starts_at = self.vault.lock_phase_start_at;
+        let lock_ends_at = lock_starts_at + self.vault.lock_phase_duration;
+        require!(
+            clock.unix_timestamp > lock_ends_at
+                || (clock.unix_timestamp > lock_starts_at
+                    && self.vault.min_cap > self.vault.total_capital_collected),
             PhaseError::InvalidPhase
         );
         let vault_reward_balance = self.vault_reward_ata.amount;
@@ -54,7 +58,7 @@ impl<'info> Close<'info> {
             vault_reward_balance == vault_staked_balance && vault_reward_balance == 0,
             VaultError::VaultNotEmpty
         );
-        
+
         let operator = self.vault.node_operator.key();
         let seeds = &[b"Vault", operator.as_ref(), &[self.vault.bump]];
         let signer = &[&seeds[..]];

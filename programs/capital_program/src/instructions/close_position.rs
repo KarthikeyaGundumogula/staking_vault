@@ -10,7 +10,6 @@ use mpl_core::accounts::BaseAssetV1;
 use nft_program::cpi::accounts::BurnAsset;
 use nft_program::program::NftProgram;
 
-
 #[derive(Accounts)]
 pub struct ClosePosition<'info> {
     /// The capital provider who owns the position
@@ -18,12 +17,12 @@ pub struct ClosePosition<'info> {
         mut,
         address = asset.owner @ SignerError::InvalidAssetOwner
     )]
-    pub capital_provider: Signer<'info>,
+    pub position_holder: Signer<'info>,
 
     /// The vault containing this position
     #[account(
         mut,
-        close = capital_provider,
+        close = position_holder,
         seeds = [b"Vault", vault.node_operator.key().as_ref()],
         bump = vault.bump,
         constraint = !vault.is_dispute_active @ VaultError::VaultUnderDispute
@@ -86,7 +85,7 @@ pub struct ClosePosition<'info> {
     #[account(
         mut,
         associated_token::mint = lock_mint,
-        associated_token::authority = capital_provider,
+        associated_token::authority = position_holder,
         associated_token::token_program = token_program
     )]
     pub capital_provider_lock_ata: InterfaceAccount<'info, TokenAccount>,
@@ -94,7 +93,7 @@ pub struct ClosePosition<'info> {
     #[account(
         mut,
         associated_token::mint = lock_mint,
-        associated_token::authority = capital_provider,
+        associated_token::authority = position_holder,
         associated_token::token_program = token_program
     )]
     pub capital_provider_reward_ata: InterfaceAccount<'info, TokenAccount>,
@@ -139,9 +138,14 @@ impl<'info> ClosePosition<'info> {
         Ok(claimable)
     }
 
-    pub fn process_transfers(&self) -> Result<()> { let clock = Clock::get()?;
-        require!(clock.unix_timestamp
-                    > self.vault.lock_phase_start_at + self.vault.lock_phase_duration,
+    pub fn process_transfers(&self) -> Result<()> {
+        let clock = Clock::get()?;
+        let lock_starts_at = self.vault.lock_phase_start_at;
+        let lock_ends_at = lock_starts_at + self.vault.lock_phase_duration;
+        require!(
+            clock.unix_timestamp > lock_ends_at
+                || (clock.unix_timestamp > lock_starts_at
+                    && self.vault.min_cap > self.vault.total_capital_collected),
             PhaseError::InvalidPhase
         );
         let total_capital_collected = self.vault.total_capital_collected;
@@ -188,11 +192,10 @@ impl<'info> ClosePosition<'info> {
         transfer_checked(cpi_ctx, amount, self.reward_mint.decimals)
     }
 
-
     pub fn burn_nft(&mut self) -> Result<()> {
         let burn_asset_accounts = BurnAsset {
             asset: self.asset.to_account_info(),
-            signer: self.capital_provider.to_account_info(),
+            signer: self.position_holder.to_account_info(),
             system_program: self.system_program.to_account_info(),
             mpl_core_program: self.mpl_core_program.to_account_info(),
         };

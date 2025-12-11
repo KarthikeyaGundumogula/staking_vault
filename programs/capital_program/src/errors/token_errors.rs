@@ -13,7 +13,7 @@ pub enum TokenError {
 
     #[msg("Insufficient balance in vault")]
     InsufficientVaultBalance,
-    
+
     #[msg("The vault has no Reward collected")]
     NoRewardsInVault,
 }

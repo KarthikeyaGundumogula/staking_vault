@@ -10,5 +10,7 @@ pub enum PositionError {
 
     #[msg("Invalid collection address")]
     InvalidCollection,
-    
+
+    #[msg("Position calimed all the rewards or no rewards are accumulated")]
+    NoRewardsToClaim,
 }

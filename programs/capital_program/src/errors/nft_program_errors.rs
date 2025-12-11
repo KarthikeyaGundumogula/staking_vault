@@ -1,8 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum NFTProgramError{
-
+pub enum NFTProgramError {
     #[msg("NFT collection already exists")]
     CollectionAlreadyExists,
 
@@ -13,5 +12,5 @@ pub enum NFTProgramError{
     InvalidNFTProgram,
 
     #[msg("Invalid Config for NFT Program")]
-    InvalidNFTConfigOwner
+    InvalidNFTConfigOwner,
 }

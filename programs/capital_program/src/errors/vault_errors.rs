@@ -32,6 +32,9 @@ pub enum VaultError {
     #[msg("Minimum lock amount must be greater than zero")]
     MinLockAmountMustBePositive,
 
+    #[msg("Amount Must be greater than the Min Lock Amount")]
+    BelowMinLockCap,
+
     #[msg("Lock Duration must be above MIN_LOCK_DURATION")]
     LockDurationRangeTooNarrow,
 

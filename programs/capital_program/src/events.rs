@@ -75,7 +75,17 @@ pub struct BeneficiaryRewardsClaimedEvent {
 }
 
 #[event]
-pub struct SlashReqRaisedEvent{
+pub struct SlashRequestCreatedEvent {
+    pub vault: Pubkey,
+    pub agent: Pubkey,
+    pub slash_claimant: Pubkey,
+    pub slash_bps: u16,
+    pub dispute_start_time: i64,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct SlashReqFinalizedEvent {
     pub claimant: Pubkey,
     pub vault: Pubkey,
     pub amount: u64,
@@ -83,22 +93,13 @@ pub struct SlashReqRaisedEvent{
 }
 
 #[event]
-pub struct SlasHReqFinalizedEvent{
-    pub claimant: Pubkey,
-    pub vault: Pubkey,
-    pub amount: u64,
+pub struct PositionClosedEvent {
+    pub holder: Pubkey,
     pub timestamp: i64,
 }
 
 #[event]
-pub struct PositionClosedEvent{
-    pub holder:Pubkey,
-    pub final_capital:u64,
-    pub timestamp:i64,
-}
-
-#[event]
-pub struct VaultClosedEvent{
-    pub node_operator:Pubkey,
-    pub timestamp:i64,
+pub struct VaultClosedEvent {
+    pub node_operator: Pubkey,
+    pub timestamp: i64,
 }

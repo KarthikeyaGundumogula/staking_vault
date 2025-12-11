@@ -1,5 +1,5 @@
 use crate::{
-    errors::PositionError,
+    errors::*,
     state::{AuthorityConfig, Position, Vault},
 };
 use anchor_lang::prelude::*;
@@ -14,7 +14,7 @@ pub struct UpdatePosition<'info> {
     /// The capital provider who owns the position
     #[account(
         mut,
-        address = asset.owner @ PositionError::InvalidAssetOwner
+        address = asset.owner @ SignerError::InvalidAssetOwner
     )]
     pub capital_provider: Signer<'info>,
 
@@ -23,7 +23,7 @@ pub struct UpdatePosition<'info> {
         mut,
         seeds = [b"Vault", vault.node_operator.key().as_ref()],
         bump = vault.bump,
-        constraint = !vault.is_dispute_active @ PositionError::VaultUnderDispute
+        constraint = !vault.is_dispute_active @ VaultError::VaultUnderDispute
     )]
     pub vault: Account<'info, Vault>,
 
@@ -53,7 +53,7 @@ pub struct UpdatePosition<'info> {
     /// Locking token mint
     #[account(
         mint::token_program = token_program,
-        address = vault.locking_token_mint @ PositionError::InvalidLockingMint
+        address = vault.locking_token_mint @ TokenError::InvalidLockingMint
     )]
     pub locking_token_mint: InterfaceAccount<'info, Mint>,
 
@@ -88,7 +88,7 @@ impl<'info> UpdatePosition<'info> {
         // Validate timing - can't update during lock phase
         require!(
             clock.unix_timestamp < self.vault.lock_phase_start_at,
-            PositionError::LockPhaseAlreadyStarted
+            PhaseError::LockPhaseAlreadyStarted
         );
 
         if update_amount > 0 {
@@ -98,7 +98,7 @@ impl<'info> UpdatePosition<'info> {
             // Withdraw capital
             self.process_withdrawal((-update_amount) as u64)?;
         } else {
-            return err!(PositionError::UpdateAmountCannotBeZero);
+            return err!(ArithmeticError::UpdateAmountCannotBeZero);
         }
 
         Ok(())
@@ -107,34 +107,34 @@ impl<'info> UpdatePosition<'info> {
     /// Processes capital deposit (increase position)
     fn process_deposit(&mut self, amount: u64) -> Result<()> {
         // Validate amount is positive
-        require_gt!(amount, 0, PositionError::AmountMustBePositive);
+        require_gt!(amount, 0, ArithmeticError::AmountMustBePositive);
 
         // Calculate new position value
         let new_position_value = self
             .position
             .total_value_locked
             .checked_add(amount)
-            .ok_or(PositionError::ArithmeticOverflow)?;
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
         // Calculate new total vault capital
         let new_total_capital = self
             .vault
             .total_capital_collected
             .checked_add(amount)
-            .ok_or(PositionError::ArithmeticOverflow)?;
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
         // Validate vault capacity
         require_gte!(
             self.vault.max_cap,
             new_total_capital,
-            PositionError::VaultMaxCapReached
+            VaultError::VaultMaxCapReached
         );
 
         // Validate provider has sufficient balance
         require_gte!(
             self.capital_provider_token_ata.amount,
             amount,
-            PositionError::InsufficientBalance
+            TokenError::InsufficientBalance
         );
 
         // Update state
@@ -150,34 +150,34 @@ impl<'info> UpdatePosition<'info> {
     /// Processes capital withdrawal (decrease position)
     fn process_withdrawal(&mut self, amount: u64) -> Result<()> {
         // Validate amount is positive
-        require_gt!(amount, 0, PositionError::AmountMustBePositive);
+        require_gt!(amount, 0, ArithmeticError::AmountMustBePositive);
 
         // Calculate new position value
         let new_position_value = self
             .position
             .total_value_locked
             .checked_sub(amount)
-            .ok_or(PositionError::ArithmeticUnderflow)?;
+            .ok_or(ArithmeticError::ArithmeticUnderflow)?;
 
         // Calculate new total vault capital
         let new_total_capital = self
             .vault
             .total_capital_collected
             .checked_sub(amount)
-            .ok_or(PositionError::ArithmeticUnderflow)?;
+            .ok_or(ArithmeticError::ArithmeticUnderflow)?;
 
         // Validate new position meets minimum requirement
         require_gte!(
             new_position_value,
             self.vault.min_lock_amount,
-            PositionError::AmountBelowMinimum
+            ArithmeticError::AmountBelowMinimum
         );
 
         // Validate vault has sufficient balance
         require_gte!(
             self.vault_token_ata.amount,
             amount,
-            PositionError::InsufficientVaultBalance
+            TokenError::InsufficientVaultBalance
         );
 
         // Update state

@@ -40,5 +40,4 @@ pub enum PhaseError {
 
     #[msg("Lock duration constraints are contradictory")]
     ConflictingLockDurations,
-
 }

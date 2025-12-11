@@ -1,10 +1,17 @@
 # User Stories for Capital Layer Protocol Staking Vault
 
+## **Actors**
+1. Node Operator - create vaults
+2. Capital Provider - Deposit Capital into vault earns rewards
+3. Position Holder - Capital Provider who holds a position NFT
+4. Agent - Monitors node performance and can raise slashing requests and deposits rewards
+5. Beneficiary - Receives a share of rewards from the vault ( An off-chain entity supplier who provides services to node operators)
+
 ## **Initialization**
 
-* As an admin, when I initialize a vault with valid configuration, the vault is created and the formation phase begins. ✅
-* As an admin, when I initialize a vault with invalid shares or min/max cap mismatch, the transaction fails with "Invalid Configuration". ✅
-* As an admin, when I initialize a vault a new MPL-Core collection is created. ✅
+* As an node-operator, when I initialize a vault with valid configuration, the vault is created and the formation phase begins. ✅
+* As an node-operator, when I initialize a vault with invalid shares or min/max cap mismatch, the transaction fails with "Invalid Configuration". ✅
+* As an node-operator, when I initialize a vault a new MPL-Core collection is created. ✅
 
 ---
 
@@ -27,6 +34,7 @@
 * As a position holder, when I list my Position NFT, the marketplace marks it as listed. 
 * As a buyer, when I purchase a listed Position NFT, I become the new owner of the locked position and rewards.
 * As a seller, when I try to list a Position NFT I do not own, the transaction fails with "Unauthorized".
+* As a Beneficiary, When I claim rewards, my share of rewards is transferred to my wallet. ✅
 
 ---
 
@@ -52,16 +60,7 @@
 
 ## **Closure Phase**
 
-* As a vault, when the Active phase duration ends, the vault transitions to Closed phase.
-* As a position holder, when I withdraw my principal in Closed phase, I receive my pro-rata capital and my Position NFT is burned.
-* As a position holder, when I try to withdraw principal before closure, the transaction fails with "Vault Not Closed".
-
----
-
-## **Admin Safety**
-
-* As an admin, when I rescue foreign tokens, only non-locking and non-reward tokens can be withdrawn.
-* As an admin, when I pause the vault, all state-changing instructions fail with "Vault Paused".
-* As an admin, when I resume the vault, normal operations continue.
-
+* As a position holder, when I withdraw my principal in Closed phase, I receive my pro-rata capital and my Position NFT is burned. ✅
+* As a position holder, when I try to withdraw principal before closure, the transaction fails with "Invalid Phase". ✅
+* As a node operator, when I close the vault after Active phase. ✅
 ---
