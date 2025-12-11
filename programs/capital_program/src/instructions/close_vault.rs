@@ -1,93 +1,87 @@
-// use crate::state::Vault;
-// use anchor_lang::prelude::*;
-// use anchor_spl::{
-//     associated_token::AssociatedToken,
-//     token_interface::{close_account, CloseAccount, Mint, TokenAccount, TokenInterface},
-// };
-// use nft_marketplace::cpi::accounts::BurnAsset;
-// use nft_marketplace::program::NftMarketplace;
+use crate::{errors::*, state::Vault};
+use anchor_lang::prelude::*;
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token_interface::{close_account, CloseAccount, Mint, TokenAccount, TokenInterface},
+};
+#[derive(Accounts)]
+pub struct Close<'info> {
+    /// CHECK: checked address of the provider
+    #[account( address = vault.node_operator)]
+    pub node_operator: Signer<'info>,
+    /// CHECK: this will be cheked by the MPL-Program
+    pub nft: UncheckedAccount<'info>,
+    #[account(
+      mut,
+      close = node_operator,
+      seeds = [b"Vault",vault.node_operator.key().as_ref()],
+      bump = vault.bump
+    )]
+    pub vault: Account<'info, Vault>,
+    #[account(
+      mut,
+      associated_token::mint = reward_token_mint,
+      associated_token::authority = vault,
+      associated_token::token_program = token_program
+    )]
+    pub vault_reward_ata: InterfaceAccount<'info, TokenAccount>,
+    #[account(
+      mut,
+      associated_token::mint = staking_token_mint,
+      associated_token::authority = vault,
+      associated_token::token_program = token_program
+    )]
+    pub vault_lock_ata: InterfaceAccount<'info, TokenAccount>,
+    #[account(mint::token_program = token_program)]
+    pub staking_token_mint: InterfaceAccount<'info, Mint>,
+    #[account(mint::token_program = token_program)]
+    pub reward_token_mint: InterfaceAccount<'info, Mint>,
+    pub token_program: Interface<'info, TokenInterface>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
+}
 
-// #[derive(Accounts)]
-// pub struct Close<'info> {
-//     /// CHECK: checked address of the provider
-//     #[account( address = staking_vault.provider)]
-//     pub provider: UncheckedAccount<'info>,
-//     #[account(mut)]
-//     pub staker: Signer<'info>,
-//     /// CHECK: this will be cheked by the MPL-Program
-//     pub nft: UncheckedAccount<'info>,
-//     #[account(
-//       mut,
-//       close = provider,
-//       seeds = [b"staking_vault",staking_vault.provider.key().as_ref()],
-//       bump = staking_vault.bump
-//     )]
-//     pub staking_vault: Account<'info, Vault>,
-//     #[account(
-//       mut,
-//       associated_token::mint = reward_token_mint,
-//       associated_token::authority = staking_vault,
-//       associated_token::token_program = token_program
-//     )]
-//     pub vault_rewards_ata: InterfaceAccount<'info, TokenAccount>,
-//     #[account(
-//       mut,
-//       associated_token::mint = staking_token_mint,
-//       associated_token::authority = staking_vault,
-//       associated_token::token_program = token_program
-//     )]
-//     pub vault_staking_ata: InterfaceAccount<'info, TokenAccount>,
-//     #[account(mint::token_program = token_program)]
-//     pub staking_token_mint: InterfaceAccount<'info, Mint>,
-//     #[account(mint::token_program = token_program)]
-//     pub reward_token_mint: InterfaceAccount<'info, Mint>,
-//     pub token_program: Interface<'info, TokenInterface>,
-//     pub associated_token_program: Program<'info, AssociatedToken>,
-//     /// CHECK: this will be cheked at marketplace
-//     pub mpl_core_program: UncheckedAccount<'info>,
-//     pub nft_marketplace: Program<'info, NftMarketplace>,
-//     pub system_program: Program<'info, System>,
-// }
+impl<'info> Close<'info> {
+        pub fn close_vault_accounts(&mut self) -> Result<()> {
+          let clock = Clock::get()?;
+          require!(clock.unix_timestamp
+                    > self.vault.lock_phase_start_at + self.vault.lock_phase_duration,
+            PhaseError::InvalidPhase
+        );
+        let vault_reward_balance = self.vault_reward_ata.amount;
+        let vault_staked_balance = self.vault_lock_ata.amount;
+        require!(
+            vault_reward_balance == vault_staked_balance && vault_reward_balance == 0,
+            VaultError::VaultNotEmpty
+        );
+        
+        let operator = self.vault.node_operator.key();
+        let seeds = &[b"Vault", operator.as_ref(), &[self.vault.bump]];
+        let signer = &[&seeds[..]];
+        let colse_reward_accounts = CloseAccount {
+            account: self.vault_reward_ata.to_account_info(),
+            destination: self.node_operator.to_account_info(),
+            authority: self.vault.to_account_info(),
+        };
+        let closing_program = &self.token_program.to_account_info();
 
-// impl<'info> Close<'info> {
-//     pub fn close_vault_accounts(&mut self) -> Result<()> {
-//         let seeds = &[
-//             b"staking_vault",
-//             self.provider.key.as_ref(),
-//             &[self.staking_vault.bump],
-//         ];
-//         let signer = &[&seeds[..]];
-//         let colse_reward_accounts = CloseAccount {
-//             account: self.vault_rewards_ata.to_account_info(),
-//             destination: self.provider.to_account_info(),
-//             authority: self.staking_vault.to_account_info(),
-//         };
-//         let closing_program = &self.token_program.to_account_info();
-//         let close_reward_ctx =
-//             CpiContext::new_with_signer(closing_program.clone(), colse_reward_accounts, signer);
-//         close_account(close_reward_ctx)?;
-//         msg!("Vault's Rewards ATA is closed");
+        let close_reward_ctx =
+            CpiContext::new_with_signer(closing_program.clone(), colse_reward_accounts, signer);
+        close_account(close_reward_ctx)?;
 
-//         let close_staking_accounts = CloseAccount {
-//             account: self.vault_staking_ata.to_account_info(),
-//             destination: self.staker.to_account_info(),
-//             authority: self.staking_vault.to_account_info(),
-//         };
-//         let close_staking_ctx =
-//             CpiContext::new_with_signer(closing_program.clone(), close_staking_accounts, signer);
+        msg!("position's Rewards ATA is closed");
 
-//         close_account(close_staking_ctx)
-//     }
+        let close_staking_accounts = CloseAccount {
+            account: self.vault_lock_ata.to_account_info(),
+            destination: self.node_operator.to_account_info(),
+            authority: self.vault.to_account_info(),
+        };
 
-//     pub fn burn_nft(&mut self) -> Result<()> {
-//         let burn_asset_accounts = BurnAsset {
-//             asset: self.nft.to_account_info(),
-//             signer: self.staker.to_account_info(),
-//             system_program: self.system_program.to_account_info(),
-//             mpl_core_program: self.mpl_core_program.to_account_info(),
-//         };
-//         let burn_cpi = CpiContext::new(self.nft_marketplace.to_account_info(), burn_asset_accounts);
-//         nft_marketplace::cpi::burn_asset(burn_cpi)?;
-//         Ok(())
-//     }
-// }
+        let close_staking_ctx =
+            CpiContext::new_with_signer(closing_program.clone(), close_staking_accounts, signer);
+
+        close_account(close_staking_ctx)?;
+        msg!("Vault's Lock Token ATA is close");
+        Ok(())
+    }
+}

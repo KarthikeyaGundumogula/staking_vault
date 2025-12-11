@@ -19,6 +19,5 @@ pub use update_position::*;
 pub use claim_beneficiary_rewards::*;
 pub use create_slash_req::*;
 pub use finalize_slash_req::*;
-// pub use approve_slash_req::*;
-// pub use close_position::*;
-// pub use close::*;
+pub use close_position::*;
+pub use close_vault::*;

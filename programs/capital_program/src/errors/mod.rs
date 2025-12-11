@@ -1,13 +1,15 @@
-pub mod claim_rewards_errors;
-pub mod create_vault_errors;
-pub mod deposit_rewards_errors;
-pub mod init_program_errors;
-pub mod position_error_errors;
-pub mod slashing_errors;
+pub mod vault_errors;
+pub mod position_errors;
+pub mod phase_errors;
+pub mod token_errors;
+pub mod arithmetic_errors;
+pub mod nft_program_errors;
+pub mod signer_errors;
 
-pub use slashing_errors::*;
-pub use claim_rewards_errors::*;
-pub use create_vault_errors::*;
-pub use deposit_rewards_errors::*;
-pub use init_program_errors::*;
-pub use position_error_errors::*;
+pub use signer_errors::*;
+pub use nft_program_errors::*;
+pub use token_errors::*;
+pub use phase_errors::*;
+pub use vault_errors::*;
+pub use position_errors::*;
+pub use arithmetic_errors::*;

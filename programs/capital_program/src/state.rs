@@ -7,7 +7,6 @@ pub struct AuthorityConfig {
     pub admin: Pubkey,
     pub agent: Pubkey,
     pub early_unlock_fee: u64, // in bps to the base 10_000
-    pub dispute_window: i64,
     pub min_lock_duration: i64,
     pub max_lock_duration: i64,
     pub bump: u8,
@@ -24,6 +23,7 @@ pub struct Vault {
     pub min_lock_amount: u64,
     pub total_rewards_deposited: u64,
     pub total_capital_collected: u64,
+    pub capital_after_slashing:u64,
 
     #[max_len(5)]
     pub beneficiaries: Vec<Beneficiary>,

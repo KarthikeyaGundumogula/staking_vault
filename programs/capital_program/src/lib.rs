@@ -66,7 +66,7 @@ pub mod capital_program {
             vault: ctx.accounts.vault.key(),
             provider: ctx.accounts.provider.key(),
             node_operator: config.node_operator,
-            staking_token: ctx.accounts.staking_token_mint.key(),
+            staking_token: ctx.accounts.lock_mint.key(),
             reward_token: ctx.accounts.reward_token_mint.key(),
             nft_collection: ctx.accounts.nft_collection.key(),
             min_cap: config.min_cap,
@@ -164,7 +164,7 @@ pub mod capital_program {
         let claimable_amount = ctx.accounts.calculate_claimable_rewards()?;
 
         // Ensure there are rewards to claim
-        require_gt!(claimable_amount, 0, ClaimRewardsError::NoRewardsToClaim);
+        require_gt!(claimable_amount, 0, RewardsError::NoRewardsToClaim);
 
         // Update position state
         ctx.accounts.process_claim(claimable_amount)?;
@@ -193,7 +193,7 @@ pub mod capital_program {
         // Calculate claimable amount
         let claimable = ctx.accounts.calculate_claimable(beneficiary_index)?;
 
-        require_gt!(claimable, 0, ClaimRewardsError::NoRewardsToClaim);
+        require_gt!(claimable, 0, RewardsError::NoRewardsToClaim);
 
         // Process claim
         ctx.accounts.process_claim(beneficiary_index, claimable)?;

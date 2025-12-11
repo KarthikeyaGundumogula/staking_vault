@@ -30,9 +30,8 @@
 - [x] T18: Implement submit_slash_proof
 - [x] T19: Implement execute_slash
 - [x] T20: Implement resolve_dispute_without_slash
-- [ ] T21: Implement withdraw_principal
-- [ ] T22: Implement admin_rescue_tokens
-- [ ] T23: Implement close_vault
+- [x] T21: Implement withdraw_principal
+- [x] T23: Implement close_vault
 - [ ] T25: Add comprehensive Anchor error codes
 - [ ] T26: Event logging for all key flows
 
@@ -59,6 +58,8 @@
 - [x] T18: Implement submit_slash_proof
 - [x] T19: Implement execute_slash
 - [x] T20: Implement resolve_dispute_without_slash
+- [x] T21: Implement withdraw_principal
+- [x] T23: Implement close_vault
 
 ## 🟩 Done - Nft Program
 - [x] T1: Implement initialize instruction

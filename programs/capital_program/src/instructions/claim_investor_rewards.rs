@@ -1,5 +1,5 @@
 use crate::constants::BASE_BPS;
-use crate::{errors::ClaimRewardsError, state::*};
+use crate::{errors::*, state::*};
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
@@ -11,7 +11,7 @@ use mpl_core::accounts::BaseAssetV1;
 pub struct ClaimInvestorRewards<'info> {
     /// The holder must be the owner of the asset (NFT)
     #[account(
-        address = asset.owner @ ClaimRewardsError::InvalidAssetOwner
+        address = asset.owner @ SignerError::InvalidAssetOwner
     )]
     pub holder: Signer<'info>,
 
@@ -26,7 +26,7 @@ pub struct ClaimInvestorRewards<'info> {
     #[account(
         seeds = [b"Vault", vault.node_operator.key().as_ref()],
         bump = vault.bump,
-        constraint = !vault.is_dispute_active @ ClaimRewardsError::VaultUnderDispute,
+        constraint = !vault.is_dispute_active @ VaultError::VaultUnderDispute,
     )]
     pub vault: Account<'info, Vault>,
 
@@ -35,20 +35,20 @@ pub struct ClaimInvestorRewards<'info> {
         mut,
         seeds = [b"Position", asset.key().as_ref()],
         bump = position.bump,
-        constraint = position.vault == vault.key() @ ClaimRewardsError::PositionVaultMismatch
+        constraint = position.vault == vault.key() @ PositionError::PositionVaultMismatch
     )]
     pub position: Account<'info, Position>,
 
     /// The MPL Core asset (NFT) representing the position
     /// CHECK: Validated by position.asset and holder ownership
     #[account(
-        address = position.asset @ ClaimRewardsError::InvalidAsset
+        address = position.asset @ PositionError::InvalidAsset
     )]
     pub asset: Account<'info, BaseAssetV1>,
 
     /// The reward token mint
     #[account(
-        address = vault.reward_token_mint @ ClaimRewardsError::InvalidRewardMint,
+        address = vault.reward_token_mint @ TokenError::InvalidRewardMint,
         mint::token_program = token_program
     )]
     pub reward_mint: InterfaceAccount<'info, Mint>,
@@ -59,7 +59,7 @@ pub struct ClaimInvestorRewards<'info> {
         associated_token::mint = reward_mint,
         associated_token::authority = vault,
         associated_token::token_program = token_program,
-        constraint = vault_ata.amount > 0 @ ClaimRewardsError::InsufficientVaultBalance
+        constraint = vault_ata.amount > 0 @ TokenError::InsufficientVaultBalance
     )]
     pub vault_ata: InterfaceAccount<'info, TokenAccount>,
 
@@ -91,31 +91,26 @@ impl<'info> ClaimInvestorRewards<'info> {
         let investors_share_bps = self.vault.investor_bps as u64;
 
         // Validate preconditions
-        require_gt!(total_vault_capital, 0, ClaimRewardsError::NoRewardsInVault);
-        require_gt!(
-            position_locked_capital,
-            0,
-            ClaimRewardsError::NoCapitalLocked
-        );
+        require_gt!(total_vault_capital, 0, TokenError::InsufficientVaultBalance);
 
         // Calculate total rewards allocated to investors
         let rewards_for_investors = total_rewards_deposited
             .checked_mul(investors_share_bps)
-            .ok_or(ClaimRewardsError::ArithmeticOverflow)?
+            .ok_or(ArithmeticError::ArithmeticOverflow)?
             .checked_div(BASE_BPS as u64)
-            .ok_or(ClaimRewardsError::ArithmeticOverflow)?;
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
         // Calculate this position's share of investor rewards
         let position_total_rewards = rewards_for_investors
             .checked_mul(position_locked_capital)
-            .ok_or(ClaimRewardsError::ArithmeticOverflow)?
+            .ok_or(ArithmeticError::ArithmeticOverflow)?
             .checked_div(total_vault_capital)
-            .ok_or(ClaimRewardsError::ArithmeticOverflow)?;
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
         // Calculate claimable amount (total earned - already claimed)
         let claimable = position_total_rewards
             .checked_sub(self.position.total_rewards_claimed)
-            .ok_or(ClaimRewardsError::ArithmeticUnderflow)?;
+            .ok_or(ArithmeticError::ArithmeticUnderflow)?;
 
         Ok(claimable)
     }
@@ -123,13 +118,13 @@ impl<'info> ClaimInvestorRewards<'info> {
     /// Updates the position state with claimed rewards
     pub fn process_claim(&mut self, amount: u64) -> Result<()> {
         // Validate amount is greater than zero
-        require_gt!(amount, 0, ClaimRewardsError::ZeroClaimAmount);
+        require_gt!(amount, 0, ArithmeticError::AmountMustBePositive);
 
         // Validate vault has sufficient balance
         require_gte!(
             self.vault_ata.amount,
             amount,
-            ClaimRewardsError::InsufficientVaultBalance
+            TokenError::InsufficientVaultBalance
         );
 
         // Update position state
@@ -137,7 +132,7 @@ impl<'info> ClaimInvestorRewards<'info> {
             .position
             .total_rewards_claimed
             .checked_add(amount)
-            .ok_or(ClaimRewardsError::ArithmeticOverflow)?;
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
         Ok(())
     }
@@ -166,4 +161,3 @@ impl<'info> ClaimInvestorRewards<'info> {
         Ok(())
     }
 }
-

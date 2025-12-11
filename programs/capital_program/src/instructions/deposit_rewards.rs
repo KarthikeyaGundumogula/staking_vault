@@ -1,4 +1,4 @@
-use crate::errors::DepositRewardsError;
+use crate::errors::*;
 use crate::state::{AuthorityConfig, Vault};
 use anchor_lang::prelude::*;
 use anchor_spl::{
@@ -11,7 +11,7 @@ pub struct DepositRewards<'info> {
     /// The authorized agent depositing rewards
     #[account(
         mut,
-        address = config.agent @ DepositRewardsError::UnauthorizedAgent
+        address = config.agent @ SignerError::UnauthorizedAgent
     )]
     pub agent: Signer<'info>,
 
@@ -20,7 +20,7 @@ pub struct DepositRewards<'info> {
         mut,
         seeds = [b"Vault", vault.node_operator.key().as_ref()],
         bump = vault.bump,
-        constraint = !vault.is_dispute_active @ DepositRewardsError::VaultUnderDispute
+        constraint = !vault.is_dispute_active @ VaultError::VaultUnderDispute
     )]
     pub vault: Account<'info, Vault>,
 
@@ -34,7 +34,7 @@ pub struct DepositRewards<'info> {
     /// Reward token mint
     #[account(
         mint::token_program = token_program,
-        address = vault.reward_token_mint @ DepositRewardsError::InvalidRewardMint
+        address = vault.reward_token_mint @ TokenError::InvalidRewardMint
     )]
     pub reward_token_mint: InterfaceAccount<'info, Mint>,
 
@@ -54,7 +54,7 @@ pub struct DepositRewards<'info> {
         associated_token::mint = reward_token_mint,
         associated_token::authority = agent,
         associated_token::token_program = token_program,
-        constraint = agent_reward_ata.amount > 0 @ DepositRewardsError::InsufficientBalance
+        constraint = agent_reward_ata.amount > 0 @ TokenError::InsufficientBalance
     )]
     pub agent_reward_ata: InterfaceAccount<'info, TokenAccount>,
 
@@ -67,27 +67,27 @@ impl<'info> DepositRewards<'info> {
     /// Validates reward deposit parameters
     pub fn validate_deposit(&self, amount: u64) -> Result<()> {
         // Validate amount is positive
-        require_gt!(amount, 0, DepositRewardsError::AmountMustBePositive);
+        require_gt!(amount, 0, ArithmeticError::AmountMustBePositive);
 
         // Validate agent has sufficient balance
         require_gte!(
             self.agent_reward_ata.amount,
             amount,
-            DepositRewardsError::InsufficientBalance
+            TokenError::InsufficientBalance
         );
 
         // Validate vault has capital collected
         require_gt!(
             self.vault.total_capital_collected,
-            0,
-            DepositRewardsError::NoCapitalInVault
+            self.vault.min_cap,
+            VaultError::BelowMinCap
         );
 
         // Validate timing - can only deposit rewards after lock phase starts
         let clock = Clock::get()?;
         require!(
             clock.unix_timestamp >= self.vault.lock_phase_start_at,
-            DepositRewardsError::LockPhaseNotStarted
+            PhaseError::InvalidPhase
         );
         Ok(())
     }
@@ -98,7 +98,7 @@ impl<'info> DepositRewards<'info> {
             .vault
             .total_rewards_deposited
             .checked_add(amount)
-            .ok_or(DepositRewardsError::ArithmeticOverflow)?;
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
         self.vault.total_rewards_deposited = new_total_rewards;
 

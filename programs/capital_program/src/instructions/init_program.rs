@@ -5,7 +5,7 @@ use nft_program::program::NftProgram;
 use nft_program::state::NFTConfig;
 
 use crate::constants::*;
-use crate::errors::InitError;
+use crate::errors::*;
 use crate::state::AuthorityConfig;
 
 #[derive(Accounts)]
@@ -23,7 +23,7 @@ pub struct InitProgram<'info> {
 
     /// NFT program configuration account
     #[account(
-        owner = nft_program.key() @ InitError::InvalidNFTConfigOwner
+        owner = nft_program.key() @ NFTProgramError::InvalidNFTConfigOwner
     )]
     pub nft_config: Account<'info, NFTConfig>,
 
@@ -34,7 +34,7 @@ pub struct InitProgram<'info> {
     /// NFT marketplace program
     #[account(
         executable,
-        constraint = nft_program.key() == nft_program::ID @ InitError::InvalidNFTProgram
+        constraint = nft_program.key() == nft_program::ID @ NFTProgramError::InvalidNFTProgram
     )]
     pub nft_program: Program<'info, NftProgram>,
 
@@ -54,33 +54,19 @@ impl<'info> InitProgram<'info> {
         require_keys_neq!(
             params.agent,
             Pubkey::default(),
-            InitError::InvalidAgentAddress
-        );
-
-        // Validate dispute window
-        require_gte!(
-            params.dispute_window,
-            DISPUTE_WINDOW,
-            InitError::DisputeWindowTooShort
-        );
-
-        // Validate lock duration constraints
-        require_gt!(
-            params.min_lock_duration,
-            0,
-            InitError::MinLockDurationMustBePositive
+            SignerError::InvalidAddress
         );
 
         // Validate reasonable duration range
         let duration_range = params
             .max_lock_duration
             .checked_sub(params.min_lock_duration)
-            .ok_or(InitError::ArithmeticUnderflow)?;
+            .ok_or(ArithmeticError::ArithmeticUnderflow)?;
 
         require_gte!(
             duration_range,
             MIN_LOCK_PERIOD,
-            InitError::LockDurationRangeTooNarrow
+            VaultError::LockDurationRangeTooNarrow
         );
 
         Ok(())
@@ -103,8 +89,6 @@ impl<'info> InitProgram<'info> {
             // Fee configuration
             early_unlock_fee: params.early_unlock_fee,
 
-            // Timing configuration
-            dispute_window: params.dispute_window,
             min_lock_duration: params.min_lock_duration,
             max_lock_duration: params.max_lock_duration,
 

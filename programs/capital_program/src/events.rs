@@ -74,3 +74,31 @@ pub struct BeneficiaryRewardsClaimedEvent {
     pub timestamp: i64,
 }
 
+#[event]
+pub struct SlashReqRaisedEvent{
+    pub claimant: Pubkey,
+    pub vault: Pubkey,
+    pub amount: u64,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct SlasHReqFinalizedEvent{
+    pub claimant: Pubkey,
+    pub vault: Pubkey,
+    pub amount: u64,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct PositionClosedEvent{
+    pub holder:Pubkey,
+    pub final_capital:u64,
+    pub timestamp:i64,
+}
+
+#[event]
+pub struct VaultClosedEvent{
+    pub node_operator:Pubkey,
+    pub timestamp:i64,
+}

@@ -1,5 +1,5 @@
 use crate::constants::*;
-use crate::errors::CreateVaultError;
+use crate::errors::*;
 use crate::state::{AuthorityConfig, Beneficiary, Vault};
 use nft_program::cpi::accounts::CreateVaultCollection;
 use nft_program::program::NftProgram;
@@ -41,21 +41,21 @@ pub struct CreateVault<'info> {
     /// Reward token mint - tokens distributed as rewards
     #[account(
         mint::token_program = token_program,
-        constraint = reward_token_mint.decimals > 0 @ CreateVaultError::InvalidRewardMint
+        constraint = reward_token_mint.decimals > 0 @ TokenError::InvalidRewardMint
     )]
     pub reward_token_mint: InterfaceAccount<'info, Mint>,
 
     /// Staking/locking token mint - tokens locked by investors
     #[account(
         mint::token_program = token_program,
-        constraint = staking_token_mint.decimals > 0 @ CreateVaultError::InvalidStakingMint,
+        constraint = lock_mint.decimals > 0 @ TokenError::InvalidLockingMint,
     )]
-    pub staking_token_mint: InterfaceAccount<'info, Mint>,
+    pub lock_mint: InterfaceAccount<'info, Mint>,
 
     /// NFT collection for vault positions
     #[account(
         mut,
-        constraint = nft_collection.lamports() == 0 @ CreateVaultError::CollectionAlreadyExists
+        constraint = nft_collection.lamports() == 0 @ NFTProgramError::CollectionAlreadyExists
     )]
     pub nft_collection: Signer<'info>,
 
@@ -63,10 +63,7 @@ pub struct CreateVault<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
 
     /// CHECK: Validated by MPL Core program during CPI
-    #[account(
-        executable,
-        constraint = mpl_core_program.key() == mpl_core::ID @ CreateVaultError::InvalidMplCoreProgram
-    )]
+    #[account(executable)]
     pub mpl_core_program: UncheckedAccount<'info>,
 
     pub nft_marketplace: Program<'info, NftProgram>,
@@ -91,7 +88,7 @@ impl<'info> CreateVault<'info> {
                 require_neq!(
                     config.beneficiaries[i].address,
                     config.beneficiaries[j].address,
-                    CreateVaultError::DuplicateBeneficiary
+                    VaultError::DuplicateBeneficiary
                 );
             }
 
@@ -99,42 +96,42 @@ impl<'info> CreateVault<'info> {
             require_gt!(
                 config.beneficiaries[i].share_bps,
                 0,
-                CreateVaultError::BeneficiaryShareMustBePositive
+                VaultError::BeneficiaryShareMustBePositive
             );
 
             // Accumulate total
             total_beneficiary_bps = total_beneficiary_bps
                 .checked_add(config.beneficiaries[i].share_bps)
-                .ok_or(CreateVaultError::ArithmeticOverflow)?;
+                .ok_or(ArithmeticError::ArithmeticOverflow)?;
         }
 
         // Validate total BPS doesn't exceed 100%
         let total_bps = total_beneficiary_bps
             .checked_add(config.investor_bps)
-            .ok_or(CreateVaultError::ArithmeticOverflow)?;
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
-        require_gte!(BASE_BPS, total_bps, CreateVaultError::BPSExceedsMaximum);
+        require_gte!(BASE_BPS, total_bps, VaultError::BPSExceedsMaximum);
 
         // Validate lock phase duration
         require_gte!(
             config.lock_phase_duration,
             MIN_LOCK_PERIOD,
-            CreateVaultError::LockPhaseTooShort
+            PhaseError::LockPhaseTooShort
         );
 
         // Validate capital caps (max should be greater than min)
         require_gt!(
             config.max_cap,
             config.min_cap,
-            CreateVaultError::InvalidCapitalRange
+            VaultError::InvalidCapitalRange
         );
 
-        require_gt!(config.min_cap, 0, CreateVaultError::MinCapMustBePositive);
+        require_gt!(config.min_cap, 0, VaultError::MinCapMustBePositive);
 
         require_gt!(
             config.min_lock_amount,
             0,
-            CreateVaultError::MinLockAmountMustBePositive
+            VaultError::MinLockAmountMustBePositive
         );
 
         // Validate timing constraints
@@ -142,12 +139,12 @@ impl<'info> CreateVault<'info> {
         let earliest_lock_time = clock
             .unix_timestamp
             .checked_add(MIN_FUND_RAISE_DURATION)
-            .ok_or(CreateVaultError::ArithmeticOverflow)?;
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
         require_gte!(
             config.lock_phase_start_time,
             earliest_lock_time,
-            CreateVaultError::LockPhaseStartsTooSoon
+            PhaseError::LockPhaseStartsTooSoon
         );
 
         Ok(())
@@ -161,7 +158,7 @@ impl<'info> CreateVault<'info> {
     ) -> Result<()> {
         self.vault.set_inner(Vault {
             // Token configuration
-            locking_token_mint: self.staking_token_mint.key(),
+            locking_token_mint: self.lock_mint.key(),
             reward_token_mint: self.reward_token_mint.key(),
 
             // Capital configuration
@@ -170,6 +167,7 @@ impl<'info> CreateVault<'info> {
             min_lock_amount: config.min_lock_amount,
             total_capital_collected: 0,
             total_rewards_deposited: 0,
+            capital_after_slashing: 0,
 
             // Beneficiary configuration
             beneficiaries: config.beneficiaries,

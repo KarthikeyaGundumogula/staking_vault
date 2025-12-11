@@ -4,7 +4,7 @@ use anchor_spl::{
     token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked},
 };
 
-use crate::errors::PositionError;
+use crate::errors::*;
 use crate::state::*;
 
 use nft_program::cpi::accounts::CreateAsset;
@@ -34,7 +34,7 @@ pub struct OpenPosition<'info> {
         mut,
         seeds = [b"Vault", vault.node_operator.key().as_ref()],
         bump = vault.bump,
-        constraint = !vault.is_dispute_active @ PositionError::VaultUnderDispute
+        constraint = !vault.is_dispute_active @ VaultError::VaultUnderDispute
     )]
     pub vault: Account<'info, Vault>,
 
@@ -64,7 +64,7 @@ pub struct OpenPosition<'info> {
         associated_token::mint = locked_token_mint,
         associated_token::authority = capital_provider,
         associated_token::token_program = token_program,
-        constraint = capital_provider_token_ata.amount >= vault.min_lock_amount @ PositionError::InsufficientBalance
+        constraint = capital_provider_token_ata.amount >= vault.min_lock_amount @ TokenError::InsufficientBalance
     )]
     pub capital_provider_token_ata: InterfaceAccount<'info, TokenAccount>,
 
@@ -81,7 +81,7 @@ pub struct OpenPosition<'info> {
     /// The token mint for locked capital
     #[account(
         mint::token_program = token_program,
-        address = vault.locking_token_mint @ PositionError::InvalidLockingMint
+        address = vault.locking_token_mint @ TokenError::InvalidLockingMint
     )]
     pub locked_token_mint: InterfaceAccount<'info, Mint>,
 
@@ -90,7 +90,6 @@ pub struct OpenPosition<'info> {
     /// CHECK: Validated by NFT program during CPI
     #[account(
         executable,
-        constraint = mpl_core_program.key() == mpl_core::ID @ PositionError::InvalidMplCoreProgram
     )]
     pub mpl_core_program: UncheckedAccount<'info>,
 
@@ -106,7 +105,7 @@ impl<'info> OpenPosition<'info> {
         require_gte!(
             amount,
             self.vault.min_lock_amount,
-            PositionError::AmountBelowMinimum
+            VaultError::Min
         );
 
         // Validate amount is positive
@@ -169,6 +168,8 @@ impl<'info> OpenPosition<'info> {
             .total_capital_collected
             .checked_add(amount)
             .ok_or(PositionError::ArithmeticOverflow)?;
+        // Deposits only allowed before Locking and the slashing happens after locking 
+        self.vault.capital_after_slashing = self.vault.total_capital_collected;
 
         // Perform the transfer
         let transfer_accounts = TransferChecked {

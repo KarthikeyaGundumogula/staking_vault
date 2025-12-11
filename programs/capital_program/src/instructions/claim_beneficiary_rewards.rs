@@ -1,5 +1,5 @@
 use crate::constants::BASE_BPS;
-use crate::{errors::ClaimRewardsError, state::*};
+use crate::{errors::*, state::*};
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
@@ -47,7 +47,7 @@ impl<'info> ClaimBeneficiaryRewards<'info> {
     pub fn calculate_claimable(&self, beneficiary_index: u8) -> Result<u64> {
         require!(
             beneficiary_index < self.vault.beneficiaries.len() as u8,
-            ClaimRewardsError::InvalidBeneficiaryIndex
+            VaultError::InvalidBeneficiaryIndex
         );
 
         let beneficiary = &self.vault.beneficiaries[beneficiary_index as usize];
@@ -56,7 +56,7 @@ impl<'info> ClaimBeneficiaryRewards<'info> {
         require_keys_eq!(
             beneficiary.address,
             self.beneficiary.key(),
-            ClaimRewardsError::UnauthorizedBeneficiary
+            SignerError::UnauthorizedBeneficiary
         );
 
         // Calculate total rewards for beneficiaries
@@ -66,34 +66,34 @@ impl<'info> ClaimBeneficiaryRewards<'info> {
             .vault
             .total_rewards_deposited
             .checked_mul(total_beneficiary_bps as u64)
-            .ok_or(ClaimRewardsError::ArithmeticOverflow)?
+            .ok_or(ArithmeticError::ArithmeticOverflow)?
             .checked_div(BASE_BPS as u64)
-            .ok_or(ClaimRewardsError::ArithmeticOverflow)?;
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
         // Calculate this beneficiary's share
         let beneficiary_total = total_beneficiary_rewards
             .checked_mul(beneficiary.share_bps as u64)
-            .ok_or(ClaimRewardsError::ArithmeticOverflow)?
+            .ok_or(ArithmeticError::ArithmeticOverflow)?
             .checked_div(total_beneficiary_bps as u64)
-            .ok_or(ClaimRewardsError::ArithmeticOverflow)?;
+            .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
         // Calculate claimable (total - already claimed)
         let claimable = beneficiary_total
             .checked_sub(beneficiary.total_claimed)
-            .ok_or(ClaimRewardsError::ArithmeticUnderflow)?;
+            .ok_or(ArithmeticError::ArithmeticUnderflow)?;
 
         Ok(claimable)
     }
 
     pub fn process_claim(&mut self, beneficiary_index: u8, amount: u64) -> Result<()> {
-        require_gt!(amount, 0, ClaimRewardsError::ZeroClaimAmount);
+        require_gt!(amount, 0, ArithmeticError::AmountMustBePositive);
 
         // Update beneficiary's claimed amount
         self.vault.beneficiaries[beneficiary_index as usize].total_claimed =
             self.vault.beneficiaries[beneficiary_index as usize]
                 .total_claimed
                 .checked_add(amount)
-                .ok_or(ClaimRewardsError::ArithmeticOverflow)?;
+                .ok_or(ArithmeticError::ArithmeticOverflow)?;
 
         Ok(())
     }
