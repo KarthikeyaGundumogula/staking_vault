@@ -5,8 +5,10 @@ declare_id!("3kLob38A4tG8m3fP9ZZwSWsjdr417DjQZ4bkqxGFjaUh");
 pub mod errors;
 pub mod instructions;
 pub mod state;
+pub mod events;
 
 use instructions::*;
+use events::*;
 
 #[program]
 pub mod nft_program {
@@ -15,31 +17,69 @@ pub mod nft_program {
 
     pub fn initialize_program(ctx: Context<InitNFTProgram>, capital_program: Pubkey) -> Result<()> {
         ctx.accounts.initialize(ctx.bumps, capital_program)?;
+        msg!("Program initialized");
+        emit!(ProgramInitializedEvent {
+            capital_program,
+            admin: *ctx.accounts.admin.key,
+            time_stamp: Clock::get()?.unix_timestamp,
+        });
         Ok(())
     }
 
     pub fn create_vault_collection(ctx: Context<CreateVaultCollection>) -> Result<()> {
         ctx.accounts.create_collection()?;
+        msg!("Vault collection created");
+        emit!(CollectionCreatedEvent {
+            collection: *ctx.accounts.collection.key,
+            update_authority: *ctx.accounts.update_authority.key,
+            time_stamp: Clock::get()?.unix_timestamp,
+        });
         Ok(())
     }
 
     pub fn create_core_asset(ctx: Context<CreateAsset>, args: CreateAssetArgs) -> Result<()> {
         ctx.accounts.create_asset(args)?;
+        msg!("Core asset created");
+        emit!(AssetMintedEvent {
+            owner: *ctx.accounts.owner.key,
+            asset: *ctx.accounts.asset.key,
+            collection: *ctx.accounts.collection.key,
+            time_stamp: Clock::get()?.unix_timestamp,
+        });
         Ok(())
     }
 
-    pub fn deposit_asset(ctx: Context<DepositAsset>) -> Result<()> {
-        ctx.accounts.deposit(ctx.bumps)?;
+    pub fn list_asset_handler(ctx: Context<ListPosition>,price:u64,paying_token_mint:Pubkey) -> Result<()> {
+        ctx.accounts.create_offer(price, paying_token_mint, ctx.bumps)?;
+        ctx.accounts.lock_asset()?;
+        msg!("Asset listed for sale");
+        emit!(OfferCreatedEvent {
+            seller: *ctx.accounts.seller.key,
+            price,
+            token_mint: paying_token_mint,
+            time_stamp: Clock::get()?.unix_timestamp,
+        });
         Ok(())
     }
 
-    pub fn claim_asset(ctx: Context<ClaimAsset>) -> Result<()> {
-        ctx.accounts.claim()?;
+    pub fn unlist_asset_handler(ctx: Context<UnlistPosition>) -> Result<()> {
+        ctx.accounts.unlock_asset()?;
+        msg!("Asset unlisted from sale");
+        emit!(OfferCancelledEvent {
+            seller: *ctx.accounts.seller.key,
+            time_stamp: Clock::get()?.unix_timestamp,
+        });
         Ok(())
     }
-
     pub fn burn_asset(ctx: Context<BurnAsset>) -> Result<()> {
         ctx.accounts.burn()?;
+        msg!("Asset burned");
+        emit!(AssetBurnedEvent {
+            owner: *ctx.accounts.holder.key,
+            asset: *ctx.accounts.asset.key,
+            collection: *ctx.accounts.collection.key,
+            time_stamp: Clock::get()?.unix_timestamp,
+        });
         Ok(())
     }
 }

@@ -10,10 +10,10 @@
 - [x] T2: Implement create collection instruction
 - [x] T3: Implement mint asset instruction
 - [x] T4: Implement burn position
-- [ ] T5: Implement list_position
-- [ ] T6: Implement delist_position
-- [ ] T7: Implement buy_position
-- [ ] T8: Implement update authorities instruction
+- [x] T5: Implement list_position
+- [x] T6: Implement delist_position
+- [x] T7: Implement buy_position
+- [x] T8: Implement update authorities instruction
 
 ### Capital Program
 - [x] T1: Implement Program initialization
@@ -39,11 +39,6 @@
 ## 🟨 In Progress - Capital Program
 
 ## 🟨 In Progress - NFT Program
-- [ ] T5: Implement list_position
-- [ ] T6: Implement delist_position
-- [ ] T7: Implement buy_position
-- [ ] T8: Implement update authorities instruction
-
 
 ## 🟩 Done - Capital Program
 - [x] T1: Implement Program initialization
@@ -70,6 +65,10 @@
 - [x] T2: Implement create collection instruction
 - [x] T3: Implement mint asset instruction
 - [x] T4: Implement burn position
+- [x] T5: Implement list_position
+- [x] T6: Implement delist_position
+- [x] T7: Implement buy_position
+- [x] T8: Implement update authorities instruction
 
 ---
 # 🧩 Epics & Tasks Mapping

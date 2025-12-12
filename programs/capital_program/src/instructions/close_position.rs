@@ -195,7 +195,7 @@ impl<'info> ClosePosition<'info> {
     pub fn burn_nft(&mut self) -> Result<()> {
         let burn_asset_accounts = BurnAsset {
             asset: self.asset.to_account_info(),
-            signer: self.position_holder.to_account_info(),
+            holder: self.position_holder.to_account_info(),
             system_program: self.system_program.to_account_info(),
             mpl_core_program: self.mpl_core_program.to_account_info(),
         };

@@ -2,8 +2,10 @@ use anchor_lang::prelude::*;
 
 #[account]
 #[derive(InitSpace)]
-pub struct Vault {
-    pub receiver: Pubkey,
+pub struct Offer {
+    pub seller: Pubkey,
+    pub price: u64,
+    pub token_mint: Pubkey,
     pub bump: u8,
 }
 
