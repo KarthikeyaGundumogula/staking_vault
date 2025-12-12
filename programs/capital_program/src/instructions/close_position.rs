@@ -53,7 +53,7 @@ pub struct ClosePosition<'info> {
     pub asset: Account<'info, BaseAssetV1>,
 
     /// The NFT asset representing the position
-    /// CHECK: Validated by position.asset and capital_provider ownership
+    /// CHECK: Validated by vault.collection and capital_provider ownership
     #[account(
         address = vault.nft_collection @ PositionError::InvalidCollection
     )]

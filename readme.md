@@ -1,116 +1,65 @@
-# 🏗️ CAPITAL LAYER PROTOCOL — PROJECT TRACKER
+# User Stories for Capital Layer Protocol Staking Vault
+
+## **Actors**
+1. Node Operator - create vaults
+2. Capital Provider - Deposit Capital into vault earns rewards
+3. Position Holder - Capital Provider who holds a position NFT
+4. Agent - Monitors node performance and can raise slashing requests and deposits rewards
+5. Beneficiary - Receives a share of rewards from the vault ( An off-chain entity supplier who provides services to node operators)
+
+## **Initialization**
+
+* As an node-operator, when I initialize a vault with valid configuration, the vault is created and the formation phase begins. ✅
+* As an node-operator, when I initialize a vault with invalid shares or min/max cap mismatch, the transaction fails with "Invalid Configuration". ✅
+* As an node-operator, when I initialize a vault a new MPL-Core collection is created. ✅
 
 ---
 
-# 📌 Kanban Board
-## 🟦 To Do
+## **Capital Formation**
 
-### NFT Program
-- [x] T1: Implement initialize instruction
-- [x] T2: Implement create collection instruction
-- [x] T3: Implement mint asset instruction
-- [x] T4: Implement burn position
-- [x] T5: Implement list_position
-- [x] T6: Implement delist_position
-- [x] T7: Implement buy_position
-- [x] T8: Implement update authorities instruction
-
-### Capital Program
-- [x] T1: Implement Program initialization
-- [x] T2: Implement vault initialization
-- [x] T3: Implement create collection cpi
-- [x] T4: Implement PositionState initialization
-- [x] T5: Implement deposit_capital 
-- [x] T6: Implement mint position nft cpi
-- [x] T7: Implement withdraw_capital_early
-- [x] T8: Implement update_position_after_transfer
-- [x] T9: Implement deposit_rewards
-- [x] T10: Implement claim_rewards
-- [x] T11: Implement raise_slash_request
-- [x] T12: Implement submit_slash_proof
-- [x] T13: Implement execute_slash
-- [x] T14: Implement resolve_dispute_without_slash
-- [x] T15: Implement withdraw_principal
-- [x] T16: Implement close_vault
-- [x] T17: Add comprehensive Anchor error codes
-- [x] T18: Event logging for all key flows
-
-
-## 🟨 In Progress - Capital Program
-
-## 🟨 In Progress - NFT Program
-
-## 🟩 Done - Capital Program
-- [x] T1: Implement Program initialization
-- [x] T2: Implement vault initialization
-- [x] T3: Implement create collection cpi
-- [x] T4: Implement PositionState initialization
-- [x] T5: Implement deposit_capital 
-- [x] T6: Implement mint position nft cpi
-- [x] T7: Implement withdraw_capital_early
-- [x] T8: Implement update_position_after_transfer
-- [x] T9: Implement deposit_rewards
-- [x] T10: Implement claim_rewards
-- [x] T11: Implement raise_slash_request
-- [x] T12: Implement submit_slash_proof
-- [x] T13: Implement execute_slash
-- [x] T14: Implement resolve_dispute_without_slash
-- [x] T15: Implement withdraw_principal
-- [x] T16: Implement close_vault
-- [x] T17: Add comprehensive Anchor error codes
-- [x] T18: Event logging for all key flows
-
-## 🟩 Done - Nft Program
-- [x] T1: Implement initialize instruction
-- [x] T2: Implement create collection instruction
-- [x] T3: Implement mint asset instruction
-- [x] T4: Implement burn position
-- [x] T5: Implement list_position
-- [x] T6: Implement delist_position
-- [x] T7: Implement buy_position
-- [x] T8: Implement update authorities instruction
-
+* As a capital provider, when I deposit capital during Formation phase, a Position NFT is minted and my deposit is recorded in the vault. ✅
+* As a capital provider, when I try to deposit after Active phase has started, the transaction fails with "Vault Not Accepting Deposits".✅
+* As a capital provider, when I withdraw early in Formation phase, my capital is returned minus the fee and my Position NFT is burned. ✅
+* As a capital provider, when I try to withdraw early after the Active phase has begun, the transaction fails with "Capital Locked". ✅
+* As a capital provider, I can close my position after fundraise period if the vault didn't reach the min_cap, and withdraw my funds. ✅
+* As a node operator, I can clsoe the vault after fundraise period if the vault didn't reach the min_cap and its ata is empty. ✅
+  
 ---
-# 🧩 Epics & Tasks Mapping
 
-## EPIC 1 — Capital Formation
-- T1 — Vault initialization
-- T4 — deposit_capital
-- T6 — withdraw_capital_early
+## **Active Phase Behavior**
 
-## EPIC 2 — Position NFTs
-- T2 — list_position
-- T3 — delist_position
-- T5 — mint position nft cpi
-- T8 — update_position_after_transfer
-- T9 — burn_position_nft cpi
-
-## EPIC 3 — Rewards
-- T12 — calc_reward_utils
-- T13 — deposit_rewards
-- T14 — claim_rewards
-
-## EPIC 4 — Slashing & Dispute
-- T16 — raise_slash_request
-- T17 — submit_slash_proof
-- T18 — execute_slash
-- T19 — resolve_dispute_without_slash
-
-## EPIC 5 — Vault Lifecycle / Redemption
-- T15 — halt_vault instruction
-- T20 — withdraw_principal
-
-## EPIC 6 — Admin & Safety
-- T21 — admin_rescue_tokens
-- T22 — admin_pause_vault
-- T23 — admin_resume_vault
-- T24 — add comprehensive Anchor error codes
-
-## EPIC 7 — Infrastructure & Testing
-- T10 — update_vault instruction utils
-- T11 — update_position instruction utils
-- T25 — event logging for all key flows
-
+* As a position holder, when rewards are deposited by the reward distributor, my claimable rewards increase proportionally to my stake. ✅
+* As a position holder, when I claim rewards, only the accumulated rewards are transferred. ✅
+* As a position holder, When I try to Unlock prinicipal, the transaction failes with "Active Phase, Rewards Locked" error. ✅
+* As a buyer, when I purchase a listed Position NFT, I become the new owner of the locked position and rewards. ✅
+* As a seller, when I try to list a Position NFT I do not own, the transaction fails with "Unauthorized". ✅
+* As a Beneficiary, When I claim rewards, my share of rewards is transferred to my wallet. ✅
 
 ---
 
+## **Reward Deposit Validation**
+
+* As a reward distributor, when I deposit rewards during the Active phase, rewards are added to the vault. ✅
+* As a reward distributor, when I try to deposit rewards using a non-authorized wallet, the transaction fails with "Invalid Reward Distributor". ✅
+* As a reward distributor, when I deposit rewards with the wrong token mint, the transaction fails with "Invalid Reward Token". ✅
+
+---
+
+## **Slashing & Dispute Window**
+
+* As an agent, when I raise a slashing request during the Active phase, a dispute window opens and slashing amount is recorded. ✅
+* As a agent, when I submit a slashing request exceeds max_slash_bps, the transaction fails with "Slash Amount Exceeds Limit". ✅
+* As an agent, when I try to raise a slashing request outside the Active phase, the transaction fails with "Invalid Phase". ✅
+* As an agent, when I submit slashing proof before the dispute window expires, the slash amount is approved. ✅
+* As an agent, when I fail to submit proof within the dispute window, the vault dismisses the slash request automatically. ✅
+* As a node operator, when I continue depositing rewards during the dispute window, deposits succeed. ✅
+* As a position holder, when I try to claim rewards during a dispute, the transaction fails with "Vault in Dispute". ✅
+
+---
+
+## **Closure Phase**
+
+* As a position holder, when I withdraw my principal in Closed phase, I receive my pro-rata capital and my Position NFT is burned. ✅
+* As a position holder, when I try to withdraw principal before closure, the transaction fails with "Invalid Phase". ✅
+* As a node operator, when I close the vault after Active phase. ✅
+---
