@@ -52,6 +52,13 @@ pub struct ClosePosition<'info> {
     )]
     pub asset: Account<'info, BaseAssetV1>,
 
+    /// The NFT asset representing the position
+    /// CHECK: Validated by position.asset and capital_provider ownership
+    #[account(
+        address = vault.nft_collection @ PositionError::InvalidCollection
+    )]
+    pub collection: UncheckedAccount<'info,>,
+
     /// Locking token mint
     #[account(
         mint::token_program = token_program,
@@ -198,6 +205,7 @@ impl<'info> ClosePosition<'info> {
             holder: self.position_holder.to_account_info(),
             system_program: self.system_program.to_account_info(),
             mpl_core_program: self.mpl_core_program.to_account_info(),
+            collection: self.collection.to_account_info(),
         };
         let burn_cpi = CpiContext::new(self.nft_program.to_account_info(), burn_asset_accounts);
         nft_program::cpi::burn_asset(burn_cpi)?;
