@@ -63,3 +63,7 @@
 * As a position holder, when I try to withdraw principal before closure, the transaction fails with "Invalid Phase". ✅
 * As a node operator, when I close the vault after Active phase. ✅
 ---
+
+
+## Program Flow Architecture
+![Programs Arch](diagrams/final-arch.png)
